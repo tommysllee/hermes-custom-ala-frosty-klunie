@@ -2,6 +2,7 @@
 .env
 *.env
 !.env.example
+!installer.env
 *.key
 *.pem
 *.token
