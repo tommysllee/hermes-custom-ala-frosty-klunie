@@ -208,3 +208,56 @@ secara langsung.
 5. Installer tidak pernah memaksa — otomatis hanya kalau kunci diberikan.
 6. Cek dashboard berkala, hapus device yang tidak dikenal.
 ```
+
+---
+
+## PENTING — Kalau auth key ditempel di repo
+
+Kalau pemilik repo menempelkan auth key langsung di `installer.env`
+supaya klien tidak perlu mengisi apa pun:
+
+### Pengaman yang sudah otomatis di installer
+
+```
+1. Nama device otomatis: hermes-<6 karakter acak>
+   → mudah dikenali & dikelompokkan di dashboard
+
+2. Device TIDAK bisa jadi exit node / subnet router
+   (--advertise-exit-node=false)
+   → mempersempit kemungkinan penyalahgunaan
+
+3. Klien diberi tahu secara jujur bahwa device-nya terhubung
+   dan diberi cara memutus sendiri:
+       sudo tailscale down && sudo tailscale logout
+```
+
+### Yang WAJIB diperhatikan pemilik repo
+
+```
+⚠️ Auth key reusable di repo publik = siapa pun bisa memakainya.
+
+Mitigasi yang disarankan:
+  • Expiration PENDEK (7–30 hari) → key mati sendiri
+    → Perpanjang dengan generate key baru secara berkala
+  • Pantau halaman Machines: device asing = hapus
+    (https://login.tailscale.com/admin/machines)
+  • Cabut key kapan saja: Settings > Keys > Revoke
+  • JANGAN pakai key yang sama untuk hal lain
+```
+
+### Batas tanggung jawab (jujur)
+
+```
+Yang BISA dilakukan pemilik key:
+  • Masuk ke device klien via SSH
+  • Melihat device klien di dashboard
+
+Yang TIDAK terjadi otomatis:
+  • Data klien tidak terkirim ke pemilik repo
+  • File klien tidak tersalin ke mana-mana
+  • Aplikasi klien tidak bisa diakses tanpa kredensialnya sendiri
+```
+
+Karena itu, installer **memberi tahu klien secara terbuka** dan
+menyediakan cara memutus. Ini penting baik untuk etika maupun
+agar klien tidak merasa dirugikan.

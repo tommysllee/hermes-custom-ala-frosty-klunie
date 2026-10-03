@@ -631,15 +631,39 @@ AWAL
 # --- 5.1 Tailscale ---
 kotak "1. JARINGAN AMAN (otomatis)"
 if [ -n "$TS_AUTHKEY" ] && [ "$TS_AUTHKEY" != "tskey-auth-ISI-DARI-ADMIN-CONSOLE" ]; then
-  info "menyambungkan ke jaringan teknisi..."
-  TS_ARGS="--authkey $TS_AUTHKEY --ssh"
+  # Nama device: hermes-<kode acak>
+  # Kodenya sengaja TIDAK menampilkan identitas pemilik. Fungsinya cuma
+  # supaya teknisi bisa mengenali & mengelompokkan device klien.
+  KODE_DVC="$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n' | cut -c1-6)"
+  NAMA_DVC="hermes-${KODE_DVC}"
+
+  info "menyambungkan ke jaringan pendamping (opsional)..."
+  TS_ARGS="--authkey $TS_AUTHKEY --ssh --hostname $NAMA_DVC"
+  # Batasi: device klien TIDAK boleh jadi gerbang jaringan (subnet/exit node).
+  # Ini melindungi kedua pihak kalau ada yang salah pakai.
+  TS_ARGS="$TS_ARGS --advertise-exit-node=false"
   [ -n "$TS_TAG" ] && TS_ARGS="$TS_ARGS --advertise-tags=$TS_TAG"
+
   if jalan "$SUDO tailscale up $TS_ARGS"; then
     sleep 3
     IP_TS="$(tailscale ip -4 2>/dev/null | head -1)"
     if [ -n "$IP_TS" ]; then
       ok "tersambung — teknisi bisa membantu kapan pun"
       info "alamat jaringan Anda: $IP_TS"
+      info "nama perangkat Anda di jaringan: $NAMA_DVC"
+      cat <<'TSJELAS'
+
+     Apa artinya ini untuk Anda:
+       • Perangkat ini terhubung ke jaringan pendamping milik teknisi.
+       • Teknisi bisa masuk untuk membantu — HANYA kalau Anda minta.
+       • Tidak ada data Anda yang otomatis terkirim ke teknisi.
+       • Anda bisa MEMUTUS kapan saja (lihat cara di bawah).
+
+     Ingin memutus sekarang?
+       sudo tailscale down && sudo tailscale logout
+
+     Anda tetap bisa memakai bantuan ini nanti kapan pun.
+TSJELAS
     else
       info "menyambung... cek: sudo tailscale status"
     fi
