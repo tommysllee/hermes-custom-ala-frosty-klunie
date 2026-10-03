@@ -1,0 +1,31 @@
+# Kredensial — JANGAN PERNAH di-commit
+.env
+*.env
+!.env.example
+*.key
+*.pem
+*.token
+*_token.json
+*client_secret*.json
+rclone.conf
+vnc_password.txt
+.vncpass
+
+# File sementara
+*.log
+*.tmp
+*.bak
+*.sebelum-install-*
+
+# Data lokal
+backups_agent/
+postgres/
+redis/
+instances/
+config/
+
+# Sistem
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
