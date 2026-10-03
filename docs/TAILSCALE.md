@@ -6,7 +6,7 @@ Untuk **pemilik tailnet** (Tommy). Tujuannya: setiap orang yang memasang
 AI agent **otomatis muncul** di dashboard Tailscale Anda, sehingga Anda
 bisa membantu kapan pun tanpa diminta.
 
-Tag yang dipakai repo ini: **`tag:dipasanginst1`** (sesuai ACL Anda).
+Tag yang dipakai repo ini: **`tag:dipasangintsl`** (sesuai ACL Anda).
 
 ---
 
@@ -15,7 +15,7 @@ Tag yang dipakai repo ini: **`tag:dipasanginst1`** (sesuai ACL Anda).
 ```
 AUTH KEY  = "tiket masuk". Ditanam di repo. Siapa pun yang menjalankan
             installer otomatis masuk ke tailnet Anda.
-TAG       = label otomatis yang menempel di device: tag:dipasanginst1
+TAG       = label otomatis yang menempel di device: tag:dipasangintsl
 ACL       = aturan izin (sudah Anda siapkan).
 ```
 
@@ -24,11 +24,11 @@ ACL       = aturan izin (sudah Anda siapkan).
 ```json
 {
   "tagOwners": {
-    "tag:dipasanginst1": ["autogroup:admin"]
+    "tag:dipasangintsl": ["autogroup:admin"]
   },
   "grants": [
     { "src": ["autogroup:member"], "dst": ["autogroup:self"], "ip": ["*"] },
-    { "src": ["autogroup:admin"], "dst": ["tag:dipasanginst1"], "ip": ["*"] }
+    { "src": ["autogroup:admin"], "dst": ["tag:dipasangintsl"], "ip": ["*"] }
   ],
   "ssh": [
     {
@@ -40,7 +40,7 @@ ACL       = aturan izin (sudah Anda siapkan).
     {
       "action": "accept",
       "src": ["autogroup:admin"],
-      "dst": ["tag:dipasanginst1"],
+      "dst": ["tag:dipasangintsl"],
       "users": ["autogroup:nonroot", "root"]
     }
   ]
@@ -53,8 +53,8 @@ ACL       = aturan izin (sudah Anda siapkan).
 |---|---|
 | `tagOwners` | Hanya Anda (admin) yang boleh memakai tag ini |
 | Device pribadi saling terhubung | Laptop/HP Anda tetap normal |
-| `admin` → `tag:dipasanginst1` | **Anda** bisa akses semua device yang dipasang repo |
-| SSH `accept` ke `tag:dipasanginst1` | **Anda** bisa SSH ke sana untuk membantu |
+| `admin` → `tag:dipasangintsl` | **Anda** bisa akses semua device yang dipasang repo |
+| SSH `accept` ke `tag:dipasangintsl` | **Anda** bisa SSH ke sana untuk membantu |
 | **Tidak ada aturan klien → klien** | Klien **tidak bisa** saling lihat ✅ |
 
 **Poin penting:** karena ACL Anda tidak memberi aturan antar-device
@@ -75,7 +75,7 @@ Description   : repo-pemasang-otomatis
 Reusable      : ✅ ON      <- banyak orang pakai kunci yang sama
 Ephemeral     : ❌ OFF     <- device tetap ada walau sedang offline
 Pre-approved  : ✅ ON      <- tidak perlu Anda approve manual
-Tags          : tag:dipasanginst1   <- WAJIB
+Tags          : tag:dipasangintsl   <- WAJIB
 Expiration    : 90 days
 ```
 
@@ -91,7 +91,7 @@ Edit `installer.env`:
 
 ```bash
 TS_AUTHKEY="tskey-auth-xxxxx"
-TS_TAG="tag:dipasanginst1"
+TS_TAG="tag:dipasangintsl"
 ```
 
 Siapa pun yang clone lalu jalankan `./install.sh` → **otomatis masuk**
@@ -137,13 +137,13 @@ Device dari repo ini akan terlihat:
 
 ```
 Nama device : hermes-agent-<nama>   (atau nama host pemasang)
-Tag         : tag:dipasanginst1     <- ini penandanya
+Tag         : tag:dipasangintsl     <- ini penandanya
 ```
 
 **Cara cepat melihat hanya yang ber-tag:**
 
 ```bash
-tailscale status | grep -i dipasanginst1
+tailscale status | grep -i dipasangintsl
 ```
 
 ---

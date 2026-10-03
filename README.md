@@ -2,19 +2,34 @@
 
 **Satu perintah. Otomatis. Siap dipakai untuk bisnis.**
 
-Pemasang ini menyiapkan asisten AI lengkap di komputer Ubuntu/ server Anda:
-WhatsApp, Google Sheets, backup otomatis, dan akses jarak jauh — semuanya
-sudah terpasang dan menyala sendiri saat komputer dinyalakan.
+Pemasang ini menyiapkan asisten AI lengkap: WhatsApp, Google Sheets,
+backup otomatis, dan akses jarak jauh — semuanya sudah terpasang dan
+menyala sendiri saat komputer dinyalakan.
 
 ---
 
-## Cara pakai
+## PILIH DULU: Sistem Anda apa?
+
+| Sistem Anda | Cara pakai | Panduan |
+|---|---|---|
+| **Ubuntu / Debian** (server, VPS, mini PC) | `./install.sh` | [docs/LINUX.md](docs/LINUX.md) |
+| **Windows 10/11** | `.\install.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
+| **MacBook** | `./install-mac.sh` | [docs/MAC.md](docs/MAC.md) |
+
+> **Belum yakin?** Ubuntu/Debian memberi hasil terbaik dan paling stabil.
+> Windows & MacBook juga jalan, tapi lihat catatan di masing-masing panduan.
+
+---
+
+## Cara pakai — Ubuntu / Debian (disarankan)
 
 ```bash
 git clone https://github.com/tommysllee/hermes-custom.git
 cd hermes-custom
 ./install.sh
 ```
+
+---
 
 Selesai. Tinggal ikuti 4 langkah terakhir yang muncul di layar
 (sekitar 5 menit).
