@@ -56,7 +56,7 @@ Lalu di dalam Ubuntu:
 
 ```bash
 sudo apt update && sudo apt install -y git
-git clone https://github.com/tommysllee/hermes-custom.git
+git clone <URL-REPO-ANDA>
 cd hermes-custom
 ./install.sh
 ```

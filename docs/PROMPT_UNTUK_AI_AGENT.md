@@ -259,7 +259,7 @@ Kerjakan Linux dulu sampai matang dan terbukti.
 
 ---
 
-## Catatan untuk Tommy (jangan ikut disalin)
+## Catatan untuk pemilik repo (jangan ikut disalin)
 
 **Kenapa prompt ini disusun begini:**
 

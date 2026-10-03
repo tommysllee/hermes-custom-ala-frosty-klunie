@@ -6,7 +6,7 @@
 #  lalu daftarkan autostart lewat Task Scheduler.
 #
 #  CARA PAKAI (PowerShell sebagai Administrator)
-#     git clone https://github.com/tommysllee/hermes-custom.git
+#     git clone <URL-REPO-ANDA>
 #     cd hermes-custom
 #     .\install.ps1
 #

@@ -2,7 +2,7 @@
 
 > **Terakhir diperbarui: Sabtu, 03 Okt 2026 · 15:35 WIB**
 
-Untuk **pemilik tailnet** (Tommy). Tujuannya: setiap orang yang memasang
+Untuk **pemilik tailnet**. Tujuannya: setiap orang yang memasang
 AI agent **otomatis muncul** di dashboard Tailscale Anda, sehingga Anda
 bisa membantu kapan pun tanpa diminta.
 

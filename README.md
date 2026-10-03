@@ -24,7 +24,7 @@ menyala sendiri saat komputer dinyalakan.
 ## Cara pakai — Ubuntu / Debian (disarankan)
 
 ```bash
-git clone https://github.com/tommysllee/hermes-custom.git
+git clone <URL-REPO-ANDA>
 cd hermes-custom
 ./install.sh
 ```
@@ -59,7 +59,7 @@ Selesai. Tinggal ikuti 4 langkah terakhir yang muncul di layar
 
 ---
 
-## Setelah pemasangan — 4 langkah
+## Setelah pemasangan — 5 langkah
 
 ### 1. Jaringan aman (otomatis, sudah berjalan)
 
@@ -101,6 +101,17 @@ hermes setup tools
 
 Login sekali lewat tautan yang muncul.
 
+### 5. Backup ke Google Drive (disarankan)
+
+Backup sudah jalan 2x sehari, tapi masih tersimpan di komputer. Kalau
+komputernya rusak, cadangannya hilang. Hubungkan ke Drive — sekali saja:
+
+```bash
+rclone config
+```
+
+Ikuti panduan: [docs/BACKUP.md](docs/BACKUP.md)
+
 ---
 
 ## Butuh bantuan?
@@ -108,6 +119,7 @@ Login sekali lewat tautan yang muncul.
 - **Panduan Ubuntu/WSL** — [docs/LINUX.md](docs/LINUX.md)
 - **Panduan Windows** — [docs/WINDOWS.md](docs/WINDOWS.md)
 - **Panduan MacBook** — [docs/MAC.md](docs/MAC.md)
+- **Backup & Google Drive** — [docs/BACKUP.md](docs/BACKUP.md)
 - **Masalah umum** — [docs/PEMECAHAN.md](docs/PEMECAHAN.md)
 
 ---
@@ -162,4 +174,4 @@ sudo systemctl status hermes-gateway   # cek status robot
 
 ---
 
-**Terakhir diperbarui: Sabtu, 03 Okt 2026 · 15:20 WIB**
+**Terakhir diperbarui: Sabtu, 03 Okt 2026 · 16:55 WIB**

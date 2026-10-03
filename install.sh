@@ -6,7 +6,7 @@
 #  paling akhir (sekitar 5 menit).
 #
 #  CARA PAKAI
-#     git clone https://github.com/tommysllee/hermes-custom.git
+#     git clone <URL-REPO-ANDA>
 #     cd hermes-custom
 #     ./install.sh
 #
@@ -77,6 +77,7 @@ NOUS_AUTO="${NOUS_AUTO:-1}"
 WA_MODE="${WA_MODE:-self-chat}"
 GOOGLE_ENABLE="${GOOGLE_ENABLE:-1}"
 AUTOBACKUP="${AUTOBACKUP:-1}"
+BACKUP_DRIVE="${BACKUP_DRIVE:-1}"
 NOVNC_ENABLE="${NOVNC_ENABLE:-1}"
 KONTAK_NAMA="${KONTAK_NAMA:-}"
 KONTAK_TELEGRAM="${KONTAK_TELEGRAM:-}"
@@ -176,7 +177,8 @@ jalan "$SUDO apt-get install -y -qq \
   curl wget git ca-certificates gnupg lsb-release \
   python3 python3-pip python3-venv \
   rsync unzip jq sqlite3 build-essential pkg-config \
-  ffmpeg xvfb x11vnc websockify imagemagick xdotool novnc ufw"
+  ffmpeg xvfb x11vnc websockify imagemagick xdotool novnc ufw \
+  rclone"
 
 HILANG=""
 for alat in curl git python3 rsync; do
@@ -207,19 +209,79 @@ else
   else gagal "Hermes gagal dipasang — jalankan manual lalu ulangi"; exit 1; fi
 fi
 
+# ---------------------------------------------------------------------------
+# Pemasang paket Python yang TAHAN — tiga cara bertingkat.
+#
+# Kenapa begini: Hermes versi baru memakai Python dari 'uv' yang DIKUNCI
+# ("externally managed") sehingga 'pip install' DITOLAK. Cara yang benar:
+# lewat 'uv pip install', atau venv Hermes (versi lama).
+# ---------------------------------------------------------------------------
 VENV="$HOME/.hermes/hermes-agent/venv/bin/python"
-[ -x "$VENV" ] && ok "lingkungan Python siap" || info "lingkungan Python menyusul"
+
+# uv bawaan Hermes, kalau ada
+UV_BIN=""
+for kandidat in "$HOME/.hermes/bin/uv" "$HOME/.local/bin/uv"; do
+  [ -x "$kandidat" ] && { UV_BIN="$kandidat"; break; }
+done
+[ -z "$UV_BIN" ] && UV_BIN="$(command -v uv 2>/dev/null || true)"
+
+pasang_paket() {
+  # $1 = nama paket python
+  local paket="$1" py
+  py="${PY_H:-$(command -v python3)}"
+  [ -n "$py" ] || return 1
+
+  # Sudah ada?
+  "$py" -c "import ${2:-$paket}" 2>/dev/null && return 0
+
+  # Cara 1: venv Hermes (versi lama) -> pip biasa
+  if [ -x "$VENV" ]; then
+    "$VENV" -m pip install -q "$paket" >>"$LOG" 2>&1 && return 0
+  fi
+
+  # Cara 2: uv (cara resmi untuk Hermes versi baru)
+  if [ -n "$UV_BIN" ]; then
+    "$UV_BIN" pip install -q --python "$py" "$paket" >>"$LOG" 2>&1 && return 0
+  fi
+
+  # Cara 3: pip biasa dengan izin paksa (usaha terakhir)
+  "$py" -m pip install -q --break-system-packages "$paket" >>"$LOG" 2>&1 && return 0
+
+  return 1
+}
+python_hermes() {
+  # 1) venv resmi kalau ada
+  if [ -x "$VENV" ]; then printf '%s' "$VENV"; return 0; fi
+  # 2) python dari uv (versi baru Hermes)
+  UVPY="$(ls -1 "$HOME/.local/share/uv/python/"*/bin/python3 2>/dev/null | head -1)"
+  if [ -n "$UVPY" ] && [ -x "$UVPY" ]; then printf '%s' "$UVPY"; return 0; fi
+  # 3) python3 sistem (terakhir)
+  command -v python3 2>/dev/null && return 0
+  return 1
+}
+PY_H="$(python_hermes || true)"
+if [ -n "$PY_H" ]; then
+  ok "lingkungan Python siap ($("$PY_H" --version 2>&1))"
+else
+  info "lingkungan Python menyusul"
+fi
 
 # Camoufox (anti-detect browser — hanya API/JSON, tanpa web)
 if [ -x "$HOME/.cache/camoufox/camoufox-bin" ]; then ok "Camoufox sudah ada"
 else
   info "mengunduh Camoufox (~1,3 GB, sabar ya)..."
-  PY="$VENV"; [ -x "$PY" ] || PY="$(command -v python3)"
-  "$PY" -c "import camoufox" 2>/dev/null || jalan "$PY -m pip install -q camoufox"
-  jalan "$PY -m camoufox fetch"
-  [ -x "$HOME/.cache/camoufox/camoufox-bin" ] \
-    && ok "Camoufox siap" \
-    || { info "Camoufox belum berhasil — dicoba nanti oleh robot sendiri"; catatan_gagal "camoufox"; }
+  PY="${PY_H:-$(command -v python3)}"
+  if pasang_paket camoufox camoufox; then
+    # unduh binary browser-nya (besar, tidak memblokir kalau gagal)
+    "$PY" -m camoufox fetch >>"$LOG" 2>&1 || true
+  fi
+  if [ -x "$HOME/.cache/camoufox/camoufox-bin" ]; then
+    ok "Camoufox siap"
+  else
+    # Unduhan ~1,3 GB sering tidak selesai dalam sekali jalan.
+    # Robot mengunduhnya sendiri saat pertama dipakai — BUKAN kegagalan.
+    info "Camoufox mengunduh sendiri saat pertama dipakai (~1,3 GB)"
+  fi
 fi
 
 # Tailscale (dipasang di sini, DISAMBUNG di tahap 5)
@@ -286,24 +348,32 @@ services:
       - SEARXNG_BASE_URL=http://localhost:8080/
 YML
   info "menyalakan SearXNG (pencarian tanpa API key)..."
-  (cd "$HOME/searxng" && docker compose up -d) >>"$LOG" 2>&1
-  sleep 6
-  curl -fsS --max-time 8 http://localhost:8080/ >/dev/null 2>&1 \
-    && ok "SearXNG hidup di http://localhost:8080" \
-    || { info "SearXNG menyala sendiri nanti — bukan masalah"; catatan_gagal "searxng"; }
+  (cd "$HOME/searxng" && docker compose up -d) >>"$LOG" 2>&1 || true
+  if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+    info "Docker belum siap — SearXNG menyusul"
+  else
+    HIDUP=0
+    for i in $(seq 1 12); do
+      if curl -fsS --max-time 5 http://localhost:8080/ >/dev/null 2>&1; then HIDUP=1; break; fi
+      sleep 5
+    done
+    [ "$HIDUP" = "1" ] \
+      && ok "SearXNG hidup di http://localhost:8080" \
+      || info "SearXNG menyala sendiri nanti — bukan masalah"
+  fi
 else
   info "SearXNG dilewati"
 fi
 
 # 3c. STT lokal (tanpa API key)
 if [ "$TANPA_STT" = "0" ]; then
-  PY="$VENV"; [ -x "$PY" ] || PY="$(command -v python3)"
-  if "$PY" -c "import faster_whisper" 2>/dev/null; then ok "mesin suara lokal siap"
+  PY="${PY_H:-$(command -v python3)}"
+  info "memasang mesin suara lokal..."
+  if pasang_paket faster-whisper faster_whisper; then
+    ok "mesin suara lokal siap"
   else
-    info "memasang mesin suara lokal..."
-    "$PY" -m pip install -q faster-whisper 2>>"$LOG" \
-      && ok "mesin suara lokal siap" \
-      || { info "suara lokal gagal — bisa diaktifkan nanti"; catatan_gagal "stt"; }
+    info "suara lokal belum terpasang — jalankan: hermes pm install"
+    catatan_gagal "stt"
   fi
   info "model 'medium' (~1,5 GB) diunduh otomatis saat pertama dipakai"
 else
@@ -352,9 +422,20 @@ YML
   info "menyalakan WhatsApp (Evolution API)..."
   (cd "$HOME/evolution" && docker compose up -d) >>"$LOG" 2>&1
   sleep 8
-  curl -fsS --max-time 8 http://localhost:8081/ >/dev/null 2>&1 \
-    && ok "Evolution API hidup (http://localhost:8081)" \
-    || { info "Evolution menyala sendiri nanti"; catatan_gagal "evolution"; }
+  if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+    info "Docker belum siap — Evolution akan menyala setelah Docker jalan"
+    catatan_gagal "evolution"
+  else
+    # tunggu maksimal 60 detik supaya container sempat hidup
+    HIDUP=0
+    for i in $(seq 1 12); do
+      if curl -fsS --max-time 5 http://localhost:8081/ >/dev/null 2>&1; then HIDUP=1; break; fi
+      sleep 5
+    done
+    [ "$HIDUP" = "1" ] \
+      && ok "Evolution API hidup (http://localhost:8081)" \
+      || { info "Evolution menyala sendiri nanti (restart: always)"; catatan_gagal "evolution"; }
+  fi
 else
   info "Evolution dilewati"
 fi
@@ -451,10 +532,20 @@ fi
 find "$DIR" -name 'agent_*.tar.gz' -mtime +7 -delete 2>/dev/null || true
 BK
   chmod +x "$HERMES_HOME/scripts/backup-agent.sh"
+  if ! command -v crontab >/dev/null 2>&1; then
+    jalan "$SUDO apt-get install -y -qq cron"
+    jalan "$SUDO systemctl enable --now cron"
+  fi
   ( crontab -l 2>/dev/null | grep -v 'backup-agent.sh'; \
     echo "0 2,14 * * * $HERMES_HOME/scripts/backup-agent.sh >> $HERMES_HOME/logs/backup.log 2>&1" \
-  ) | crontab - 2>/dev/null && ok "backup otomatis 2x sehari aktif" \
-    || info "backup otomatis gagal didaftarkan"
+  ) | crontab - 2>/dev/null || true
+  # Verifikasi NYATA — jangan percaya exit code saja
+  if crontab -l 2>/dev/null | grep -q 'backup-agent.sh'; then
+    ok "backup otomatis 2x sehari aktif"
+  else
+    info "backup otomatis belum terdaftar — dicoba lagi nanti"
+    catatan_gagal "backup"
+  fi
 fi
 
 # 4c. Google (Sheets/Drive/Docs) — alat disiapkan; login di tahap 5
@@ -477,6 +568,51 @@ Yang akan didapat:
 Kalau tidak dipakai, bagian ini boleh dilewati sepenuhnya.
 GSH
   ok "alat Google (Sheets/Drive/Docs) disiapkan"
+fi
+
+# 4d. Google Drive untuk BACKUP (rclone) — beda dari 4c!
+#     4c = robot bisa baca/tulis Sheets. 4d = cadangan otomatis ke Drive.
+if [ "$AUTOBACKUP" = "1" ] && [ "$BACKUP_DRIVE" = "1" ]; then
+  if command -v rclone >/dev/null 2>&1 && rclone listremotes 2>/dev/null | grep -q .; then
+    ok "Google Drive untuk backup sudah terhubung"
+  else
+    info "Google Drive untuk backup belum terhubung"
+    cat > "$HERMES_HOME/google/CARA-HUBUNGKAN-DRIVE.md" <<'GDR'
+# Menghubungkan Google Drive untuk Backup
+
+Cadangan robot otomatis tersimpan di komputer. Supaya aman kalau
+komputernya rusak, hubungkan ke Google Drive — sekali saja.
+
+## Langkah
+
+Jalankan:
+
+    rclone config
+
+Jawab seperti ini:
+
+    n) New remote                    -> ketik: n
+    name> gdrive                     -> ketik: gdrive
+    Storage> drive                   -> ketik: drive
+    client_id>                       -> Enter (kosongkan)
+    client_secret>                   -> Enter (kosongkan)
+    scope> 1                         -> ketik: 1
+    root_folder_id>                  -> Enter
+    service_account_file>            -> Enter
+    Edit advanced config? n          -> ketik: n
+    Use auto config? y               -> ketik: y
+
+Browser akan terbuka. Login Google, klik Allow.
+
+## Uji
+
+    rclone listremotes          -> harus muncul: gdrive:
+    ~/.hermes/scripts/backup-agent.sh    -> jalankan sekali untuk uji
+
+Panduan lengkap: docs/BACKUP.md
+GDR
+    info "panduan Google Drive ditulis: ~/.hermes/google/CARA-HUBUNGKAN-DRIVE.md"
+  fi
 fi
 
 # ===========================================================================
@@ -581,6 +717,29 @@ if [ "$GOOGLE_ENABLE" = "1" ]; then
      menyimpan file ke Drive, dan membaca dokumen.
 
 GO
+fi
+
+# --- 5.5 Google Drive untuk BACKUP ---
+if [ "$AUTOBACKUP" = "1" ] && [ "$BACKUP_DRIVE" = "1" ]; then
+  echo
+  kotak "5. BACKUP KE GOOGLE DRIVE (disarankan)"
+  cat <<'BKD'
+
+     Backup robot sudah jalan 2x sehari — TAPI masih tersimpan di
+     komputer ini. Kalau komputernya rusak, cadangannya ikut hilang.
+
+     Hubungkan ke Google Drive (sekali saja):
+
+        rclone config
+
+     Ikuti panduan di:
+        ~/.hermes/google/CARA-HUBUNGKAN-DRIVE.md
+
+     Atau baca: docs/BACKUP.md
+
+     Setelah terhubung, cadangan otomatis terkirim ke Drive Anda.
+
+BKD
 fi
 
 # --- Penutup ---

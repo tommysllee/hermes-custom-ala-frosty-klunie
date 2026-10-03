@@ -7,7 +7,7 @@
 #  lalu mendaftarkan autostart lewat LaunchAgent.
 #
 #  CARA PAKAI
-#     git clone https://github.com/tommysllee/hermes-custom.git
+#     git clone <URL-REPO-ANDA>
 #     cd hermes-custom
 #     ./install-mac.sh
 #
@@ -364,7 +364,13 @@ chmod +x "$HERMES_HOME/scripts/backup-agent.sh"
 # cron di macOS masih ada
 ( crontab -l 2>/dev/null | grep -v 'backup-agent.sh'; \
   echo "0 2,14 * * * $HERMES_HOME/scripts/backup-agent.sh >> $HERMES_HOME/logs/backup.log 2>&1" \
-) | crontab - 2>/dev/null && ok "backup otomatis 2x sehari aktif"
+) | crontab - 2>/dev/null || true
+# Verifikasi NYATA — jangan percaya exit code saja
+if crontab -l 2>/dev/null | grep -q 'backup-agent.sh'; then
+  ok "backup otomatis 2x sehari aktif"
+else
+  info "backup otomatis belum terdaftar — cek System Settings > Privacy > Full Disk Access"
+fi
 
 # ===========================================================================
 # TAHAP 5 — GILIRAN ANDA
