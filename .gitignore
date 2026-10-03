@@ -30,3 +30,4 @@ config/
 Thumbs.db
 __pycache__/
 *.pyc
+CHECKLIST.md
