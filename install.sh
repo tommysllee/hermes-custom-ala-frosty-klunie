@@ -173,12 +173,20 @@ info "memperbarui daftar paket..."
 jalan "$SUDO apt-get update -qq"
 
 info "memasang alat dasar (3-5 menit)..."
+# Alat dasar — dikelompokkan jelas. Kalau ada yang tak tersedia di
+# distro tertentu, tidak menggagalkan seluruh pemasangan.
 jalan "$SUDO apt-get install -y -qq \
   curl wget git ca-certificates gnupg lsb-release \
-  python3 python3-pip python3-venv \
-  rsync unzip jq sqlite3 build-essential pkg-config \
+  python3 python3-pip python3-venv python3-dev \
+  rsync unzip jq sqlite3 zstd tar \
+  build-essential pkg-config make \
   ffmpeg xvfb x11vnc websockify imagemagick xdotool novnc ufw \
-  rclone"
+  rclone cron logrotate \
+  iproute2 iptables iputils-ping dnsutils net-tools \
+  wireless-tools iw rfkill wpasupplicant netplan.io \
+  usbutils pciutils lsof htop procps \
+  at-spi2-core dbus-x11 fonts-liberation" \
+  || info "sebagian alat dasar tidak tersedia — dilanjutkan"
 
 HILANG=""
 for alat in curl git python3 rsync; do
@@ -715,9 +723,61 @@ NOUS2
   [ -n "${IP_TS:-}" ] && echo "     Lalu buka: http://$IP_TS:6080/vnc.html"
 fi
 
+# --- 5.2b Kepribadian & alur kerja (dari AI lain) ---
+if [ "${PANDU_KEPRIBADIAN:-1}" = "1" ]; then
+echo
+kotak "3. KEPRIBADIAN ROBOT (disarankan)"
+cat <<'KEPRIB'
+
+     Robot ini jauh lebih berguna kalau tahu SIAPA Anda dan BAGAIMANA
+     Anda bekerja. Cara tercepat: ambil dari AI yang sudah Anda pakai.
+
+     A. Tulisan kepribadian
+        Buka salah satu (mana yang Anda pakai):
+
+          ChatGPT : https://chatgpt.com
+                    Settings -> Personalization -> Memory
+                    Lalu minta: "Tuliskan ringkasan lengkap tentang saya:
+                    gaya komunikasi, preferensi, cara kerja, nilai, dan
+                    hal yang saya tidak suka. Format siap tempel."
+
+          Gemini  : https://gemini.google.com
+                    ikon setelan -> Personalization
+                    Minta hal yang sama.
+
+          Claude  : https://claude.ai
+                    Settings -> Profile
+                    Minta hal yang sama.
+
+        Simpan hasilnya, lalu tempel ke:
+            ~/.hermes/SOUL.md
+
+     B. Alur kerja di bidang Anda
+        Pikirkan: Anda ingin dibantu soal apa?
+        (contoh: jualan online, konsultan, penulis, admin)
+
+        Minta AI itu menuliskan alurnya secara rinci:
+
+          "Tuliskan alur kerja lengkap saya di bidang <BIDANG>:
+           langkah demi langkah, hal yang harus dicek, rumus/kriteria
+           keputusan, dan hal yang harus dihindari. Format siap tempel
+           sebagai panduan untuk asisten AI."
+
+        Tempel ke:
+            ~/.hermes/PANDUAN_KERJA.md
+
+        Kenapa penting? Robot membaca keduanya setiap saat, jadi dia
+        langsung paham gaya Anda tanpa harus belajar dari nol.
+KEPRIB
+if [ "${PAKSA:-0}" != "1" ] && [ -t 0 ]; then
+  printf "     Sudah selesai? (tekan Enter untuk lanjut) "
+  read -r _ || true
+fi
+fi
+
 # --- 5.3 WhatsApp (self-chat) ---
 echo
-kotak "3. WHATSAPP (opsional)"
+kotak "4. WHATSAPP (opsional)"
 cat <<'WA'
 
      Mode SELF-CHAT: robot hanya membalas pesan yang Anda kirim ke
@@ -737,7 +797,7 @@ WA
 # --- 5.4 Google OAuth ---
 if [ "$GOOGLE_ENABLE" = "1" ]; then
   echo
-  kotak "4. GOOGLE — Sheets / Drive / Docs (opsional)"
+  kotak "5. GOOGLE — Sheets / Drive / Docs (opsional)"
   cat <<'GO'
 
      Jalankan, lalu ikuti tautan:
@@ -753,7 +813,7 @@ fi
 # --- 5.5 Google Drive untuk BACKUP ---
 if [ "$AUTOBACKUP" = "1" ] && [ "$BACKUP_DRIVE" = "1" ]; then
   echo
-  kotak "5. BACKUP KE GOOGLE DRIVE (disarankan)"
+  kotak "6. BACKUP — Drive & GitHub (disarankan)"
   cat <<'BKD'
 
      Backup robot sudah jalan 2x sehari — TAPI masih tersimpan di
