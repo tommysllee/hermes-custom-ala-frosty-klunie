@@ -1,184 +1,256 @@
-# Backup Otomatis & Google Drive
+# BACKUP LENGKAP & PEMULIHAN
 
-> **Terakhir diperbarui: Sabtu, 03 Okt 2026 · 16:50 WIB**
+> Terakhir diperbarui: 4 Okt 2026 · 09:15 WIB
 
-Robot Anda otomatis mencadangkan dirinya **2x sehari**. Panduan ini
-menjelaskan cara memastikan cadangannya benar-benar tersimpan.
-
----
-
-## Apa yang dicadangkan
-
-```
-~/.hermes/          <- seluruh pengaturan, obrolan, keterampilan
-   ↓
-~/backups_agent/agent_YYYYMMDD_HHMM.tar.gz
-   ↓
-Google Drive Anda (kalau sudah dihubungkan)
-```
-
-- **Kapan:** 2x sehari (jam 02:00 dan 14:00)
-- **Disimpan:** 7 hari terakhir (yang lebih lama dihapus otomatis)
-- **Ukuran:** biasanya 10–100 MB per arsip
+Robot Anda otomatis mencadangkan **seluruh dirinya** dua kali sehari.
+Panduan ini menjelaskan apa yang disalin, di mana disimpan, dan cara
+memulihkannya kalau komputer rusak.
 
 ---
 
-## Cek apakah backup jalan
+## 1. APA YANG DICADANGKAN
+
+Semuanya. Bukan cuma pengaturan:
+
+```
+OTAK ROBOT
+  • skills/          kemampuannya
+  • cron/            tugas terjadwalnya
+  • templates/       contoh siap pakai
+  • knowledge/       bahan pengetahuannya
+
+WATAK ROBOT
+  • SOUL.md          kepribadiannya
+  • profiles/        semua profil (kalau ada beberapa)
+  • config.yaml      seluruh pengaturannya
+  • .env             kunci aksesnya (rahasia!)
+
+ALAT KERJA
+  • scripts/         skrip bantuannya
+  • hooks/           pemicu otomatisnya
+  • remote-view/     alat bantu layar jarak jauh
+
+INGATANNYA
+  • sessions/        riwayat percakapan
+  • state.db         basis data ingatan
+  • session_search.db indeks pencarian
+```
+
+**Kenapa lengkap?** Kalau cuma dicadangkan pengaturannya, robotnya harus
+dilatih dari nol. Dengan cara ini, robot baru langsung jadi seperti sedia
+kala — sama seperti memulihkan seluruh isi ponsel dari cadangan.
+
+---
+
+## 2. DI MANA DISIMPAN
+
+```
+~/hermes-backup/                        ← di komputer Anda
+   hermes-snapshot-20261004_0900.tar.zst
+   hermes-snapshot-20261004_0900.CATATAN.txt
+
+Google Drive (kalau disiapkan)
+   gdrive:hermes-backup/                ← di awan, aman kalau komputer rusak
+```
+
+⚠️ **Cadangan sengaja disimpan DI LUAR folder `~/.hermes`.**
+Kalau disimpan di dalam, cadangan akan ikut hilang saat `.hermes` rusak.
+Itu sama saja tidak punya cadangan.
+
+---
+
+## 3. JADWAL
+
+```
+02:00 UTC = 09:00 WIB     cadangan pagi
+14:00 UTC = 21:00 WIB     cadangan malam
+14:00 UTC = 21:00 WIB     perawatan harian (bersih-bersih)
+
+Cadangan > 30 hari dibuang otomatis (hemat ruang)
+```
+
+---
+
+## 4. CARA MEMULIHKAN (ALA TWRP)
+
+Simpan dulu berkas `backup-lengkap.sh` di luar folder `.hermes`,
+misalnya di folder rumah. Lalu:
 
 ```bash
-# Lihat arsip yang sudah dibuat
-ls -lh ~/backups_agent/
-
-# Lihat catatan backup
-cat ~/.hermes/logs/backup.log
-
-# Cek jadwalnya terdaftar
-crontab -l | grep backup-agent
+cd ~
+bash backup-lengkap.sh --pulihkan ~/hermes-backup/hermes-snapshot-XXX.tar.zst
 ```
 
-**Sehat** kalau: ada file `.tar.gz` di `~/backups_agent/` dan
-`backup.log` berisi baris tanggal.
+Atau langsung dengan tar:
+
+```bash
+cd ~
+tar --zstd -xf ~/hermes-backup/hermes-snapshot-XXX.tar.zst
+```
+
+**Apa yang terjadi:**
+
+```
+1. Sistem lama Anda dipindah ke  ~/.hermes-lama-<tanggal>
+   (tidak dihapus — kalau pemulihan gagal, masih bisa kembali)
+2. Isi cadangan dikembalikan ke   ~/.hermes
+3. Anda diminta menjalankan:      hermes gateway restart
+```
+
+**Kalau ada yang salah:** kembalikan sistem lama —
+
+```bash
+rm -rf ~/.hermes
+mv ~/.hermes-lama-<tanggal> ~/.hermes
+hermes gateway restart
+```
 
 ---
 
-## Menghubungkan Google Drive (rclone)
+## 5. MENGHUBUNGKAN KE GOOGLE DRIVE
 
-**Ini perlu Anda lakukan sekali.** Tanpa ini, cadangan hanya tersimpan
-di komputer — kalau komputernya rusak, cadangan ikut hilang.
+Cadangan di komputer saja masih berisiko: kalau komputernya rusak atau
+dicuri, cadangannya ikut hilang. Menghubungkan ke Google Drive
+menyelesaikannya.
 
-### Langkah 1 — Jalankan penyiapan
+### Langkah 1 — Buat aplikasi di Google Cloud
+
+```
+1. Buka  https://console.cloud.google.com/
+2. Buat proyek baru (misalnya: hermes-backup)
+3. Buka   https://console.cloud.google.com/apis/library/drive.googleapis.com
+   → klik ENABLE
+4. Buka   https://console.cloud.google.com/apis/credentials
+   → Create Credentials → OAuth client ID
+   → Application type: Desktop app
+   → Create
+5. Unduh JSON-nya → pindahkan jadi:  ~/.config/rclone/gdrive.json
+```
+
+### Langkah 2 — Hubungkan
 
 ```bash
 rclone config
 ```
 
-Ikuti tanya-jawabnya:
+Ikuti:
 
 ```
-n) New remote                    <- ketik: n  lalu Enter
-name> gdrive                     <- ketik: gdrive  lalu Enter
-Storage> drive                   <- ketik: drive (atau nomor untuk Google Drive)
-client_id>                       <- Enter saja (kosongkan)
-client_secret>                   <- Enter saja (kosongkan)
-scope> 1                         <- ketik: 1 (akses penuh)
-root_folder_id>                  <- Enter saja
-service_account_file>            <- Enter saja
-Edit advanced config? n          <- ketik: n
-Use auto config? y               <- ketik: y
+n                          → remote baru
+name: gdrive               → namanya harus "gdrive" (huruf kecil)
+Storage: drive             → pilih Google Drive
+client_id: (kosongkan)
+client_secret: (kosongkan)
+scope: 1                   → Full access
+root_folder_id: (kosong)
+service_account_file: (kosong)
+Edit advanced config: n
+Use web browser: n         → karena ini server
+   → akan muncul tautan; buka di HP/komputer Anda
+   → izinkan → salin kode → tempel di terminal
+Configure as Shared Drive: n
+y                          → simpan
+q                          → keluar
 ```
-
-### Langkah 2 — Login Google
-
-Browser akan terbuka (atau tautan muncul di layar). Login dengan akun
-Google Anda, lalu klik **Allow**.
-
-**Server tanpa layar?** Setelah `Use auto config? y`, akan muncul pesan
-bahwa browser tidak bisa dibuka — pilih **n** untuk cara manual, lalu
-buka tautan yang muncul di HP/laptop Anda, salin kodenya, tempel balik.
 
 ### Langkah 3 — Uji
 
 ```bash
-# Cek 'gdrive' sudah terdaftar
-rclone listremotes
-
-# Uji kirim
-rclone lsd gdrive:
+rclone listremotes                      # harus muncul: gdrive:
+bash ~/.hermes/scripts/backup-lengkap.sh
+rclone ls gdrive:hermes-backup/         # harus muncul arsipnya
 ```
 
-Kalau muncul daftar folder Drive Anda → **berhasil**.
+---
 
-### Langkah 4 — Backup berikutnya otomatis ke Drive
+## 6. MENGHUBUNGKAN KE GITHUB
 
-Backup jam 14:00 (atau 02:00 berikutnya) akan otomatis mengirim ke Drive.
-Untuk menguji sekarang tanpa menunggu:
+Cara ini cadangannya **berversi** — bisa kembali ke titik mana pun.
+
+### Langkah 1 — Buat token GitHub
+
+```
+1. Buka  https://github.com/settings/tokens?type=beta
+2. Generate new token (fine-grained)
+3. Name: hermes-backup
+4. Expiration: 90 days (atau No expiration kalau memang mau)
+5. Repository access: Only select repositories
+   → pilih repo cadangan Anda (harus dibuat dulu)
+6. Permissions → Repository permissions:
+       Contents .............. Read and write
+       Administration ......... Read and write
+7. Generate token → SALIN (hanya muncul sekali)
+```
+
+### Langkah 2 — Simpan aman & hubungkan
 
 ```bash
-~/.hermes/scripts/backup-agent.sh
+mkdir -p ~/.hermes/kredensial
+printf '%s' '<token Anda>' > ~/.hermes/kredensial/github-backup.token
+chmod 600 ~/.hermes/kredensial/github-backup.token
+
+# setel git supaya tidak minta sandi lagi
+git config --global credential.helper store
+```
+
+> **Kalau Anda memakai Perplexity/AI untuk memandu:**
+> minta AI itu melihat halaman GitHub tersebut lebih dulu
+> (`https://github.com/settings/tokens?type=beta`) supaya langkahnya sesuai
+> tampilan terkini — halaman GitHub sering berubah. Pola dasar yang harus
+> dipahami: pilih **repository** dulu → baru **permissions** → baru generate.
+
+---
+
+## 7. PERINTAHKAN KE AI ANDA
+
+Kalau Anda memakai AI untuk memandu, tempelkan kalimat ini:
+
+```
+Cadangkan sistem Hermes saya ke Google Drive dan/atau GitHub.
+
+Sebelum memandu, LIHAT DULU halaman-halaman ini di internet supaya
+langkahnya akurat (halaman sering berubah):
+  • https://rclone.org/drive/                    (cara rclone + Drive)
+  • https://github.com/settings/tokens?type=beta (cara token GitHub)
+  • https://console.cloud.google.com/apis/credentials (cara OAuth)
+
+Lalu pandu saya langkah demi langkah. Jangan menebak strukturnya.
+Sebutkan selalu jam WIB saat memberi waktu/jadwal.
 ```
 
 ---
 
-## Ke mana cadangannya pergi di Drive
+## 8. YANG PERLU ANDA TAHU
 
 ```
-gdrive:/
-  └── agent_20261003_1400.tar.gz
-      agent_20261003_0200.tar.gz
-      ...
+✅ Cadangan lengkap       → robot bisa hidup kembali utuh
+✅ Disimpan di luar       → selamat kalau .hermes rusak
+✅ Ke Drive               → selamat kalau komputer hilang
+✅ Ke GitHub              → bisa kembali ke titik mana pun
+
+⚠️ .env berisi kunci rahasia → simpan remote Drive sebagai PRIVATE
+⚠️ Cadangan > 30 hari dihapus otomatis → kalau perlu lama, ubah jadwalnya
 ```
 
-Kalau ingin dirapikan ke dalam folder, edit `~/.hermes/scripts/backup-agent.sh`
-dan ubah bagian `rclone copy` menjadi:
+---
+
+## 9. JIKA BACKUP GAGAL
 
 ```bash
-rclone copy "$ARSIP" "gdrive:AI-Agent-Backup/" -q 2>/dev/null
+# lihat catatan
+tail -50 ~/.hermes/logs/backup-lengkap.log
+
+# uji manual
+bash ~/.hermes/scripts/backup-lengkap.sh
+
+# cek ruang disk
+df -h ~
 ```
 
----
-
-## Memulihkan dari cadangan
-
-```bash
-# 1. Lihat isi arsip dulu (jangan langsung timpa)
-tar -tzf ~/backups_agent/agent_20261003_1400.tar.gz | head -20
-
-# 2. Pulihkan
-cd ~
-tar -xzf ~/backups_agent/agent_20261003_1400.tar.gz
-
-# 3. Nyalakan ulang robot
-sudo systemctl restart hermes-gateway
-```
-
-**Peringatan:** langkah 2 akan **menimpa** pengaturan yang ada. Kalau
-ragu, pindahkan dulu folder lama:
-
-```bash
-mv ~/.hermes ~/.hermes.lama
-tar -xzf ~/backups_agent/agent_20261003_1400.tar.gz
-```
-
----
-
-## Backup ke GitHub (nanti, kalau sudah diajari)
-
-Saat ini cadangan **hanya ke Google Drive** — sesuai permintaan.
-
-Kalau nanti ingin cadangan juga ke GitHub (lebih tahan lama), teknisi
-Anda akan mengajari caranya. Yang dibutuhkan:
+Masalah tersering:
 
 ```
-1. Akun GitHub
-2. Repository private
-3. Kunci akses (Personal Access Token)
-4. Skrip tambahan untuk mengirim cadangan
-```
-
-Bagian ini **tidak** perlu sekarang. Drive sudah cukup.
-
----
-
-## Pemecahan masalah
-
-| Gejala | Sebab | Perbaikan |
-|---|---|---|
-| Tidak ada file di `~/backups_agent/` | Cron belum jalan | `crontab -l \| grep backup-agent` |
-| Ada file lokal, tidak sampai Drive | rclone belum disiapkan | Ikuti panduan di atas |
-| `rclone: command not found` | Belum terpasang | `sudo apt install rclone` |
-| Gagal login Google | Tautan kedaluwarsa | Ulangi `rclone config` |
-| Disk penuh | Arsip menumpuk | Arsip >7 hari otomatis dihapus |
-| Ingin ubah jam backup | Jadwal tidak cocok | `crontab -e` lalu ubah `0 2,14 * * *` |
-
----
-
-## Yang perlu diingat
-
-```
-1. Backup jalan otomatis 2x sehari (02:00 dan 14:00).
-2. Tanpa Google Drive, cadangan hanya di komputer — rawan hilang.
-3. Menghubungkan Drive = sekali saja, lewat 'rclone config'.
-4. Arsip lebih dari 7 hari dihapus otomatis (hemat disk).
-5. GitHub belum aktif — hanya Drive. Sesuai permintaan.
-6. Uji pemulihan SEKALI supaya Anda tahu caranya sebelum panik.
+"zstd tidak tersedia"   → sudo apt-get install -y zstd
+"rclone tidak ada"      → sudo apt-get install -y rclone
+"Drive belum disiapkan" → ulangi bagian 5 di atas
 ```

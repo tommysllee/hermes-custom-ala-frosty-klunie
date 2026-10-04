@@ -615,6 +615,13 @@ GDR
   fi
 fi
 
+# Fitur tambahan: backup lengkap, perawatan harian, autostart system-level,
+# pintu akses (SSH/VNC/Tailscale tanpa kadaluarsa), panduan ingatan
+if [ -f "$(dirname "$0")/scripts/fitur-tambahan.sh" ]; then
+  TS_AUTHKEY="$TS_AUTHKEY" TS_TAG="$TS_TAG" \
+    bash "$(dirname "$0")/scripts/fitur-tambahan.sh"
+fi
+
 # ===========================================================================
 # TAHAP 5 — GILIRAN ANDA
 # ===========================================================================
