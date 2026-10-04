@@ -8,36 +8,60 @@ menyala sendiri saat komputer dinyalakan.
 
 ---
 
-## PILIH DULU: Sistem Anda apa?
+## CARA PALING MUDAH — satu perintah, tanpa clone
 
-| Sistem Anda | Cara pakai | Panduan |
-|---|---|---|
-| **Ubuntu / Debian** (server, VPS, mini PC) | `./install.sh` | [docs/LINUX.md](docs/LINUX.md) |
-| **Windows 10/11** | `.\install.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
-| **MacBook** | `./install-mac.sh` | [docs/MAC.md](docs/MAC.md) |
+Tempel **satu baris** ini di terminal, tekan Enter, selesai.
+Tidak perlu paham Git. Tidak perlu unduh apa pun.
 
-> **Belum yakin?** Ubuntu/Debian memberi hasil terbaik dan paling stabil.
-> Windows & MacBook juga jalan, tapi lihat catatan di masing-masing panduan.
-
----
-
-## Cara pakai — Ubuntu / Debian (disarankan)
+### 🐧 Ubuntu / Debian (server, VPS, mini PC) — paling disarankan
 
 ```bash
-git clone <URL-REPO-ANDA>
-cd hermes-custom
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.sh | bash
 ```
 
----
+### 🪟 Windows 10/11
 
-Selesai. Tinggal ikuti 4 langkah terakhir yang muncul di layar
-(sekitar 5 menit).
+Buka **PowerShell sebagai Administrator** (klik kanan → *Run as administrator*),
+lalu tempel:
+
+```powershell
+irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.ps1 | iex
+```
+
+### 🍎 MacBook
+
+Buka **Terminal**, lalu tempel:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang-mac.sh | bash
+```
 
 **Mau cek dulu tanpa memasang apa pun?**
 
 ```bash
-./install.sh --tes
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.sh | bash -s -- --tes
+```
+
+---
+
+## PILIH DULU: Sistem Anda apa?
+
+| Sistem Anda | Satu perintah | Panduan |
+|---|---|---|
+| **Ubuntu / Debian** | `pasang.sh` | [docs/LINUX.md](docs/LINUX.md) |
+| **Windows 10/11** | `pasang.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
+| **MacBook** | `pasang-mac.sh` | [docs/MAC.md](docs/MAC.md) |
+
+> **Belum yakin?** Ubuntu/Debian memberi hasil terbaik dan paling stabil.
+
+---
+
+## Cara pakai dengan clone (kalau Anda sudah paham Git)
+
+```bash
+git clone https://github.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview
+cd hermes-custom
+./install.sh
 ```
 
 ---
