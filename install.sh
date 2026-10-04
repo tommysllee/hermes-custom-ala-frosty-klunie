@@ -332,11 +332,35 @@ browser:
   backend: camoufox
   headless: true
 
+# Computer use: robot bisa mengendalikan layar (klik, ketik, lihat).
+# Dipakai kalau perlu mengoper aplikasi yang tidak punya API.
+computer_use:
+  enabled: true
+  display: ":99"
+
 terminal:
   backend: local
   timeout: 180
+
+# Alat yang aktif. computer_use sengaja dinyalakan sejak awal.
+tools:
+  enabled:
+    - browser
+    - clarify
+    - code_execution
+    - computer_use
+    - file
+    - image_gen
+    - memory
+    - session_search
+    - skills
+    - terminal
+    - todo
+    - tts
+    - vision
+    - web
 YAML
-  ok "pengaturan dasar ditulis (suara lokal, pencarian, browser)"
+  ok "pengaturan dasar ditulis (suara lokal, pencarian, browser, computer use)"
 else
   info "pengaturan sudah ada — tidak ditimpa"
 fi
