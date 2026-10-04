@@ -39,7 +39,7 @@ fi
 BERKAS="install.sh installer.env pasang.sh"
 BERKAS="$BERKAS scripts/fitur-tambahan.sh"
 BERKAS="$BERKAS docs/BACKUP.md docs/LINUX.md docs/TAILSCALE.md"
-BERKAS="$BERKAS docs/GITHUB.md docs/PEMECAHAN.md docs/PROMPT_UNTUK_AI_AGENT.md"
+BERKAS="$BERKAS docs/PEMECAHAN.md docs/PROMPT_UNTUK_AI_AGENT.md"
 
 mkdir -p "$KERJA/scripts" "$KERJA/docs"
 

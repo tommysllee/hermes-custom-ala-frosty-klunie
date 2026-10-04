@@ -39,7 +39,8 @@ fi
 # --- 3. Unduh berkas -----------------------------------------------------
 BERKAS="install-mac.sh installer.env pasang-mac.sh"
 BERKAS="$BERKAS scripts/fitur-tambahan.sh"
-BERKAS="$BERKAS docs/BACKUP.md docs/MAC.md docs/TAILSCALE.md docs/GITHUB.md"
+BERKAS="$BERKAS docs/BACKUP.md docs/TAILSCALE.md docs/MAC.md"
+BERKAS="$BERKAS docs/PEMECAHAN.md docs/PROMPT_UNTUK_AI_AGENT.md"
 
 mkdir -p "$KERJA/scripts" "$KERJA/docs"
 GAGAL=0
