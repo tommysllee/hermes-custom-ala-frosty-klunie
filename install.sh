@@ -150,8 +150,8 @@ else
 fi
 
 # Disk & memori
-RUANG_GB=$(df -BG --output=avail / 2>/dev/null | tail -1 | tr -dc '0-9')
-info "disk space : ${RUANG_GB:-?} GB"
+SPACE_GB=$(df -BG --output=avail / 2>/dev/null | tail -1 | tr -dc '0-9')
+info "disk space : ${SPACE_GB:-?} GB"
 if [ -n "$SPACE_GB" ] && [ "$SPACE_GB" -lt 15 ]; then
   fail "less than 15 GB free — free up space first"
   exit 1
@@ -568,7 +568,7 @@ case "${1:-status}" in
       command -v "$b" >/dev/null 2>&1 && PASANG_BROWSER="$b"
     done
     if [ -z "$BROWSER" ]; then
-      echo "  → memasang browser mandiri (epiphany)..."
+      echo "  → installing a standalone browser (epiphany)..."
       sudo -n apt-get install -y -qq epiphany-browser >/dev/null 2>&1 || true
       command -v epiphany >/dev/null 2>&1 && PASANG_BROWSER="epiphany"
     fi
@@ -611,7 +611,7 @@ case "${1:-status}" in
       done
     fi
     if [ -z "$RUNNING" ]; then
-      echo "  → memasang browser (epiphany)..."
+      echo "  → installing a browser (epiphany)..."
       sudo -n apt-get install -y -qq epiphany-browser >/dev/null 2>&1 || true
       command -v epiphany >/dev/null 2>&1 && JALAN="$(command -v epiphany)"
     fi
