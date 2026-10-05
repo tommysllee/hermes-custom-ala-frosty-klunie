@@ -73,12 +73,12 @@ Cadangan > 30 hari dibuang otomatis (hemat ruang)
 
 ## 4. CARA MEMULIHKAN (ALA TWRP)
 
-Simpan dulu berkas `backup-lengkap.sh` di luar folder `.hermes`,
+Simpan dulu berkas `full-backup.sh` di luar folder `.hermes`,
 misalnya di folder rumah. Lalu:
 
 ```bash
 cd ~
-bash backup-lengkap.sh --pulihkan ~/hermes-backup/hermes-snapshot-XXX.tar.zst
+bash full-backup.sh --pulihkan ~/hermes-backup/hermes-snapshot-XXX.tar.zst
 ```
 
 Atau langsung dengan tar:
@@ -157,7 +157,7 @@ q                          → keluar
 
 ```bash
 rclone listremotes                      # harus muncul: gdrive:
-bash ~/.hermes/scripts/backup-lengkap.sh
+bash ~/.hermes/scripts/full-backup.sh
 rclone ls gdrive:hermes-backup/         # harus muncul arsipnya
 ```
 
@@ -238,10 +238,10 @@ Sebutkan selalu jam WIB saat memberi waktu/jadwal.
 
 ```bash
 # lihat catatan
-tail -50 ~/.hermes/logs/backup-lengkap.log
+tail -50 ~/.hermes/logs/full-backup.log
 
 # uji manual
-bash ~/.hermes/scripts/backup-lengkap.sh
+bash ~/.hermes/scripts/full-backup.sh
 
 # cek ruang disk
 df -h ~

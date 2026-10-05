@@ -42,8 +42,8 @@ Buat struktur seperti ini:
     │   └── PEMECAHAN.md        # masalah umum & solusinya
     ├── scripts/
     │   ├── cek-sistem.sh       # bagian TAHAP 1 (dipisah dari install.sh)
-    │   ├── pasang-dasar.sh     # bagian TAHAP 2
-    │   ├── pasang-aplikasi.sh  # bagian TAHAP 3
+    │   ├── install-base.sh      # STAGE 2 part
+    │   ├── install-apps.sh      # STAGE 3 part
     │   ├── pesan-akhir.sh      # bagian TAHAP 4
     │   └── pencatat.sh         # fungsi log bersama
     └── templates/

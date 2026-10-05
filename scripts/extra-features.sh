@@ -3,17 +3,17 @@
 #  HERMES — PENAMBAHAN FITUR (dipanggil oleh install.sh)
 #
 #  Menambahkan:
-#   A. Backup lengkap + perawatan harian (jadwal cron)
+#   A. Full backup + daily maintenance (cron schedule)
 #   B. Autostart system-level + linger tanpa password
-#   C. Pintu akses: SSH + VNC + Tailscale tanpa kadaluarsa
-#   D. Berkas panduan ingatan
+#   C. Pintu akses: SSH + VNC + Tailscale tanpa expiry
+#   D. Memory guide file
 # ===========================================================================
 
 set -uo pipefail
 
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 TAG="${TS_TAG:-tag:dipasangintsl}"
-LOG="$HERMES_HOME/logs/fitur-tambahan.log"
+LOG="$HERMES_HOME/logs/extra-features.log"
 mkdir -p "$HERMES_HOME/scripts" "$HERMES_HOME/logs" "$HERMES_HOME/templates"
 SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo -n"
 USER_NAME="$(id -un)"
@@ -26,14 +26,14 @@ catat()  { echo "[$(date '+%Y-%m-%d %H:%M:%S %Z')] $*" >>"$LOG"; }
 # A. BACKUP LENGKAP + PERAWATAN HARIAN
 # ===========================================================================
 echo ""
-f_info "menyiapkan backup lengkap & perawatan harian..."
+f_info "setting up full backup & daily maintenance..."
 
-# --- perawatan harian: 14:00 UTC = 21:00 WIB ---
-cat > "$HERMES_HOME/scripts/perawatan-harian.sh" <<'PERAWATAN'
+# --- daily maintenance: 14:00 UTC = 21:00 WIB ---
+cat > "$HERMES_HOME/scripts/daily-maintenance.sh" <<'PERAWATAN'
 #!/usr/bin/env bash
 set -uo pipefail
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
-LOG="$HERMES_HOME/logs/perawatan-harian.log"
+LOG="$HERMES_HOME/logs/daily-maintenance.log"
 mkdir -p "$(dirname "$LOG")"
 catat() { echo "[$(date '+%Y-%m-%d %H:%M:%S %Z')] $*" | tee -a "$LOG"; }
 echo "" >> "$LOG"
@@ -66,7 +66,7 @@ if command -v apt-get >/dev/null 2>&1; then
     DEBIAN_FRONTEND=noninteractive $SUDO apt-get -y -qq -o Dpkg::Options::=--force-confdef \
       -o Dpkg::Options::=--force-confold upgrade >>"$LOG" 2>&1 || true
     $SUDO apt-get -y -qq autoremove >>"$LOG" 2>&1 || true
-  else catat "    sudah terbaru"; fi
+  else catat "    already up to date"; fi
 fi
 catat "3/4 update Hermes..."
 command -v hermes >/dev/null 2>&1 && { hermes update >>"$LOG" 2>&1 || true; }
@@ -77,19 +77,19 @@ if systemctl list-unit-files hermes-gateway.service >/dev/null 2>&1; then
 fi
 catat "===== SELESAI ====="
 PERAWATAN
-chmod +x "$HERMES_HOME/scripts/perawatan-harian.sh"
-f_ok "perawatan harian siap (21:00 WIB)"
+chmod +x "$HERMES_HOME/scripts/daily-maintenance.sh"
+f_ok "daily maintenance ready (21:00 WIB)"
 
 # --- backup lengkap ---
-cat > "$HERMES_HOME/scripts/backup-lengkap.sh" <<'BKP'
+cat > "$HERMES_HOME/scripts/full-backup.sh" <<'BKP'
 #!/usr/bin/env bash
 set -uo pipefail
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
-# PENTING: cadangan disimpan DI LUAR folder .hermes
-# Kalau di dalam, cadangan ikut hilang saat .hermes rusak/dihapus.
+# IMPORTANT: backups are stored OUTSIDE the .hermes folder
+# If inside, they are lost with .hermes when it breaks/is deleted.
 TUJUAN="${BACKUP_DIR:-$HOME/hermes-backup}"
 NAMA="hermes-snapshot-$(date +%Y%m%d_%H%M)"
-LOG="$HERMES_HOME/logs/backup-lengkap.log"
+LOG="$HERMES_HOME/logs/full-backup.log"
 mkdir -p "$TUJUAN" "$(dirname "$LOG")"
 catat() { echo "[$(date '+%Y-%m-%d %H:%M:%S %Z')] $*" | tee -a "$LOG"; }
 
@@ -110,14 +110,14 @@ if [ "${1:-}" = "--pulihkan" ]; then
   tar --zstd -xf "$BERKAS" -C "$(dirname "$HERMES_HOME")" 2>/dev/null \
     || tar -xf "$BERKAS" -C "$(dirname "$HERMES_HOME")"
   mkdir -p "$HERMES_HOME/scripts"
-  cp "$SALINAN" "$HERMES_HOME/scripts/backup-lengkap.sh" 2>/dev/null || true
-  chmod +x "$HERMES_HOME/scripts/backup-lengkap.sh" 2>/dev/null || true
+  cp "$SALINAN" "$HERMES_HOME/scripts/full-backup.sh" 2>/dev/null || true
+  chmod +x "$HERMES_HOME/scripts/full-backup.sh" 2>/dev/null || true
   echo "  ✓ Dipulihkan."
   echo "  Langkah berikutnya:"
   echo "    hermes gateway restart"
   echo "    hermes doctor"
   echo ""
-  echo "  CATATAN: mulai sekarang cadangan disimpan di $HOME/hermes-backup"
+  echo "  NOTE: from now on backups are stored in $HOME/hermes-backup"
   echo "  (di luar .hermes) supaya tidak ikut hilang kalau .hermes rusak."
   exit 0
 fi
@@ -160,26 +160,26 @@ CTN
     rclone copy "$BERKAS" gdrive:hermes-backup/ >>"$LOG" 2>&1 \
       && catat "    ✓ terkirim ke Google Drive"
   else
-    catat "    (Drive belum disiapkan — lihat docs/BACKUP.md)"
+    catat "    (Drive not configured yet — see docs/BACKUP.md)"
   fi
 else
   catat "✗ gagal membuat arsip"; exit 1
 fi
 catat "===== SELESAI ====="
 BKP
-chmod +x "$HERMES_HOME/scripts/backup-lengkap.sh"
-f_ok "backup lengkap siap (termasuk state.db + profil + sesi)"
+chmod +x "$HERMES_HOME/scripts/full-backup.sh"
+f_ok "full backup ready (includes state.db + profiles + sessions)"
 
-# --- catat jadwal di cron ---
+# --- record the schedule in cron ---
 if command -v crontab >/dev/null 2>&1; then
-  ( crontab -l 2>/dev/null | grep -v 'perawatan-harian\|backup-lengkap'; \
-    echo "0 2,14 * * * $HERMES_HOME/scripts/backup-lengkap.sh >> $HERMES_HOME/logs/backup.log 2>&1"; \
-    echo "0 14 * * * $HERMES_HOME/scripts/perawatan-harian.sh >> $HERMES_HOME/logs/perawatan.log 2>&1" \
+  ( crontab -l 2>/dev/null | grep -v 'daily-maintenance\|full-backup'; \
+    echo "0 2,14 * * * $HERMES_HOME/scripts/full-backup.sh >> $HERMES_HOME/logs/backup.log 2>&1"; \
+    echo "0 14 * * * $HERMES_HOME/scripts/daily-maintenance.sh >> $HERMES_HOME/logs/perawatan.log 2>&1" \
   ) | crontab - 2>/dev/null || true
-  if crontab -l 2>/dev/null | grep -q 'backup-lengkap'; then
-    f_ok "jadwal dipasang: backup 2x (09:00 & 21:00 WIB) + perawatan (21:00 WIB)"
+  if crontab -l 2>/dev/null | grep -q 'full-backup'; then
+    f_ok "schedule set: backup twice (09:00 & 21:00 WIB) + maintenance (21:00 WIB)"
   else
-    f_info "cron belum aktif — jalankan: sudo apt-get install -y cron"
+    f_info "cron not active — run: sudo apt-get install -y cron"
   fi
 fi
 
@@ -187,7 +187,7 @@ fi
 # B. AUTOSTART SYSTEM-LEVEL + LINGER TANPA PASSWORD
 # ===========================================================================
 echo ""
-f_info "menyiapkan autostart system-level & linger..."
+f_info "setting up system-level autostart & linger..."
 
 if [ -d /etc/sudoers.d ]; then
   T="$(mktemp)"
@@ -211,7 +211,7 @@ fi
 # C. PINTU AKSES: SSH + VNC + TAILSCALE TANPA KADALUARSA
 # ===========================================================================
 echo ""
-f_info "menyiapkan pintu akses jarak jauh..."
+f_info "setting up remote access..."
 
 # SSH server
 if ! command -v sshd >/dev/null 2>&1; then
@@ -220,17 +220,17 @@ fi
 if command -v sshd >/dev/null 2>&1; then
   $SUDO systemctl enable ssh >/dev/null 2>&1 || $SUDO systemctl enable sshd >/dev/null 2>&1 || true
   $SUDO systemctl start ssh >/dev/null 2>&1 || $SUDO systemctl start sshd >/dev/null 2>&1 || true
-  f_ok "SSH aktif (nyala sendiri saat boot)"
+  f_ok "SSH enabled (starts at boot)"
 else
-  f_info "SSH belum bisa dipasang"
+  f_info "SSH could not be installed"
 fi
 
-# Tailscale tanpa kadaluarsa
+# Tailscale tanpa expiry
 if command -v tailscale >/dev/null 2>&1; then
   NAMA_DVC="hermes-$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n' | cut -c1-6)"
   f_info "menyambungkan ke jaringan pendamping (nama: $NAMA_DVC)..."
 
-  # --advertise-tags + --hostname; coba-ulang otomatis kalau internet belum ada
+  # --advertise-tags + --hostname; auto-retry if the internet is not up
   COBA=0
   while [ $COBA -lt 3 ]; do
     if $SUDO tailscale up --authkey "${TS_AUTHKEY:-}" --ssh \
@@ -239,17 +239,17 @@ if command -v tailscale >/dev/null 2>&1; then
       break
     fi
     COBA=$((COBA+1))
-    [ $COBA -lt 3 ] && { f_info "belum berhasil, coba lagi ($COBA/3)..."; sleep 5; }
+    [ $COBA -lt 3 ] && { f_info "not yet successful, retrying ($COBA/3)..."; sleep 5; }
   done
 
   if $SUDO tailscale status >/dev/null 2>&1; then
-    # matikan kadaluarsa node key → tersambung selamanya
+    # disable node key expiry -> connected permanently
     if $SUDO tailscale set --no-expiry 2>/dev/null || \
        $SUDO tailscale up --no-expiry --authkey "${TS_AUTHKEY:-}" --ssh \
          --hostname "$NAMA_DVC" --advertise-tags="$TAG" >>"$LOG" 2>&1; then
-      f_ok "tersambung TANPA kadaluarsa (selamanya)"
+      f_ok "connected WITHOUT expiry (permanent)"
     else
-      f_ok "tersambung (kadaluarsa node key bisa dimatikan dari dashboard)"
+      f_ok "connected (node key expiry can be disabled from the dashboard)"
     fi
     IP_TS="$(tailscale ip -4 2>/dev/null | head -1)"
     [ -n "$IP_TS" ] && f_ok "alamat jaringan: $IP_TS (nama: $NAMA_DVC)"
@@ -257,7 +257,7 @@ if command -v tailscale >/dev/null 2>&1; then
     # layanan ini tetap hidup walau mesin restart
     $SUDO systemctl enable tailscaled >/dev/null 2>&1 || true
   else
-    f_info "penyambungan tertunda — akan dicoba ulang oleh perawatan harian"
+    f_info "connection deferred — daily maintenance will retry"
   fi
 fi
 
@@ -265,9 +265,9 @@ fi
 # D. BERKAS PANDUAN INGATAN
 # ===========================================================================
 echo ""
-if [ ! -f "$HERMES_HOME/PANDUAN_INGATAN.md" ]; then
-  f_info "menulis panduan ingatan..."
-  cat > "$HERMES_HOME/PANDUAN_INGATAN.md" <<'PANDUAN'
+if [ ! -f "$HERMES_HOME/MEMORY_GUIDE.md" ]; then
+  f_info "writing the memory guide..."
+  cat > "$HERMES_HOME/MEMORY_GUIDE.md" <<'PANDUAN'
 # PANDUAN INGATAN — ATURAN BAKU
 
 > Dibaca robot setiap saat. Jangan dihapus.
@@ -282,7 +282,7 @@ paling sesuai, sedekat mungkin dengan sub-bab yang berhubungan.
 
   1. Tentukan tentang APA (gaya / cara kerja / alat / nilai / larangan)
   2. Cari sub-bab PALING DEKAT — jangan taruh di bab umum
-  3. Kalau belum ada sub-bab cocok → BUAT sub-bab baru di bab yang sesuai
+  3. If no matching sub-section exists, CREATE a new sub-section in the right chapter
   4. Format tiap catatan: APA + KAPAN DIPAKAI + ALASANNYA
 
 ## ATURAN 2 — JANGAN MERINGKAS, JANGAN MENGHAPUS
@@ -327,18 +327,18 @@ _(tambahkan di sini)_
 
 ## BAB 5 — LARANGAN
 ### Sub-bab 5.1 — Larangan Baku
-  • Jangan menulis password/kunci rahasia ke obrolan atau berkas terbuka
+  • Never write passwords/secret keys into chat or plain files
   • Jangan meringkas atau menghapus isi ingatan
   • Jangan bertindak atas pertanyaan — tunggu perintah jelas
 PANDUAN
-  f_ok "panduan ingatan ditulis: ~/.hermes/PANDUAN_INGATAN.md"
+  f_ok "memory guide written: ~/.hermes/MEMORY_GUIDE.md"
 else
-  f_ok "panduan ingatan sudah ada (tidak ditimpa)"
+  f_ok "memory guide already exists (not overwritten)"
 fi
 
 # tandai di SOUL supaya robot benar-benar membacanya
-if [ -f "$HERMES_HOME/SOUL.md" ] && ! grep -q "PANDUAN_INGATAN" "$HERMES_HOME/SOUL.md" 2>/dev/null; then
-  printf '\n\n## Ingatan\n\nSelalu ikuti `~/.hermes/PANDUAN_INGATAN.md`.\nTermasuk aturan: selalu kategorikan otomatis, jangan meringkas atau\nmenghapus ingatan (hanya menambah/mengganti), dan selalu sebut jam WIB.\n' >> "$HERMES_HOME/SOUL.md"
+if [ -f "$HERMES_HOME/SOUL.md" ] && ! grep -q "MEMORY_GUIDE" "$HERMES_HOME/SOUL.md" 2>/dev/null; then
+  printf '\n\n## Ingatan\n\nSelalu ikuti `~/.hermes/MEMORY_GUIDE.md`.\nTermasuk aturan: selalu kategorikan otomatis, jangan meringkas atau\nmenghapus ingatan (hanya menambah/mengganti), dan selalu sebut jam WIB.\n' >> "$HERMES_HOME/SOUL.md"
   f_ok "aturan ingatan ditautkan ke SOUL.md"
 fi
 

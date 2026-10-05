@@ -1,8 +1,8 @@
 # ============================================================================
-#  install.ps1 — Pemasang AI Agent Bisnis untuk WINDOWS
+#  install.ps1 — Business AI Agent installer for WINDOWS
 # ============================================================================
-#  Windows tidak punya sistem Linux, jadi pemasangnya memakai WSL2 + Ubuntu.
-#  Skrip ini mengurus semuanya: pasang WSL, jalankan pemasang Linux,
+#  Windows tidak punya sistem Linux, jadi pemasangnya metheni WSL2 + Ubuntu.
+#  This script handles everything: install WSL, run the Linux installer,
 #  lalu daftarkan autostart lewat Task Scheduler.
 #
 #  CARA PAKAI (PowerShell sebagai Administrator)
@@ -16,29 +16,29 @@
 #
 #  ---------------------------------------------------------------------------
 #  URUTAN (yang melibatkan manusia SELALU di akhir)
-#     Tahap 1  periksa Windows + WSL
-#     Tahap 2  pasang WSL2 + Ubuntu (kalau belum ada)
-#     Tahap 3  jalankan pemasang Linux di dalam Ubuntu
-#     Tahap 4  daftarkan autostart (Task Scheduler)
-#     Tahap 5  GILIRAN ANDA: Tailscale, Nous Portal, WhatsApp, Google
+#     Stage 1  periksa Windows + WSL
+#     Stage 2  install WSL2 + Ubuntu (kalau not yet ada)
+#     Stage 3  run the Linux installer inside Ubuntu
+#     Stage 4  daftarkan autostart (Task Scheduler)
+#     Stage 5  YOUR TURN: Tailscale, Nous Portal, WhatsApp, Google
 #  ----------------------------------------------------------------------------
 
 param(
-    [switch]$Tes,
-    [switch]$LewatiStt
+    [switch]$Test,
+    [switch]$SkipStt
 )
 
 $ErrorActionPreference = "Stop"
-$VERSI = "1.0.0"
+$VERSION = "1.0.0"
 $DISTRO = "Ubuntu"
 
 # ---------------------------------------------------------------------------
 # Tampilan
 # ---------------------------------------------------------------------------
-function Tulis-Ok    { param($m) Write-Host "  [OK] $m"   -ForegroundColor Green }
-function Tulis-Info  { param($m) Write-Host "  [>]  $m"   -ForegroundColor Yellow }
-function Tulis-Gagal { param($m) Write-Host "  [X]  $m"   -ForegroundColor Red }
-function Tulis-Judul { param($m) Write-Host "`n=== $m ===" -ForegroundColor Cyan }
+function Write-Ok    { param($m) Write-Host "  [OK] $m"   -ForegroundColor Green }
+function Write-Info  { param($m) Write-Host "  [>]  $m"   -ForegroundColor Yellow }
+function Write-Fail { param($m) Write-Host "  [X]  $m"   -ForegroundColor Red }
+function Write-Title { param($m) Write-Host "`n=== $m ===" -ForegroundColor Cyan }
 
 Write-Host @"
 +====================================================================+
@@ -46,204 +46,204 @@ Write-Host @"
 |        P E M A S A N G   A I   A G E N T   B I S N I S             |
 |                        (Windows)                                   |
 |                                                                    |
-|   Semuanya berjalan sendiri. Anda hanya perlu bertindak di         |
+|   Semuanya berjalan sendiri. you hanya perlu bertindak di         |
 |   bagian TERAKHIR (sekitar 5 menit).                               |
 |                                                                    |
 +====================================================================+
 "@ -ForegroundColor Cyan
 
 # ---------------------------------------------------------------------------
-# Cek: dijalankan sebagai Administrator?
+# Check: running as Administrator?
 # ---------------------------------------------------------------------------
-$idSaya = [Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = New-Object Security.Principal.WindowsPrincipal($idSaya)
+$mySid = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($mySid)
 $admin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $admin) {
-    Tulis-Gagal "Skrip ini harus dijalankan sebagai Administrator."
+    Write-Fail "This script must be run as Administrator."
     Write-Host ""
     Write-Host "  1. Tutup PowerShell ini" -ForegroundColor Yellow
-    Write-Host "  2. Buka Start Menu, cari 'PowerShell'" -ForegroundColor Yellow
+    Write-Host "  2. Open Start Menu, cari 'PowerShell'" -ForegroundColor Yellow
     Write-Host "  3. Klik kanan -> 'Run as administrator'" -ForegroundColor Yellow
     Write-Host "  4. Ulangi perintahnya" -ForegroundColor Yellow
     exit 1
 }
-Tulis-Ok "berjalan sebagai Administrator"
+Write-Ok "berjalan sebagai Administrator"
 
 # ===========================================================================
-# TAHAP 1 — PERIKSA WINDOWS & WSL
+# STAGE 1 — PERIKSA WINDOWS & WSL
 # ===========================================================================
-Tulis-Judul "TAHAP 1 dari 5 - MEMERIKSA SISTEM"
+Write-Title "STAGE 1 of 5 - CHECKING SYSTEM"
 
 $os = Get-CimInstance Win32_OperatingSystem
-Tulis-Info "Windows : $($os.Caption) (build $($os.BuildNumber))"
+Write-Info "Windows : $($os.Caption) (build $($os.BuildNumber))"
 
 if ([int]$os.BuildNumber -lt 19041) {
-    Tulis-Gagal "Windows terlalu lama. Butuh Windows 10 versi 2004 (build 19041) atau lebih baru."
+    Write-Fail "Windows terlalu lama. Need Windows 10 versi 2004 (build 19041) atau lebih baru."
     exit 1
 }
-Tulis-Ok "versi Windows didukung"
+Write-Ok "Windows version didukung"
 
 # Ruang disk
 $disk = Get-PSDrive C
-$ruangGB = [math]::Round($disk.Free / 1GB, 1)
-Tulis-Info "ruang disk C: $ruangGB GB"
-if ($ruangGB -lt 18) {
-    Tulis-Gagal "ruang kurang dari 18 GB — kosongkan dulu"
+$spaceGB = [math]::Round($disk.Free / 1GB, 1)
+Write-Info "ruang disk C: $spaceGB GB"
+if ($spaceGB -lt 18) {
+    Write-Fail "ruang kurang dari 18 GB — kosongkan dulu"
     exit 1
 }
-Tulis-Ok "ruang cukup"
+Write-Ok "ruang cukup"
 
 # Memori
 $ramGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
-Tulis-Info "memori      : $ramGB GB"
+Write-Info "memori      : $ramGB GB"
 
 # Virtualisasi (syarat WSL2)
 $cpu = Get-CimInstance Win32_Processor
 if ($cpu.VirtualizationFirmwareEnabled -eq $false) {
-    Tulis-Gagal "Virtualisasi mati di BIOS."
+    Write-Fail "Virtualisasi mati di BIOS."
     Write-Host "  Nyalakan VT-x (Intel) atau AMD-V di BIOS, lalu ulangi." -ForegroundColor Yellow
     exit 1
 }
-Tulis-Ok "virtualisasi aktif"
+Write-Ok "virtualisasi aktif"
 
-# WSL sudah ada?
-$wslAda = $false
+# WSL already ada?
+$hasWsl = $false
 try {
     $null = wsl --status 2>$null
-    $wslAda = $true
-    Tulis-Ok "WSL sudah terpasang"
+    $hasWsl = $true
+    Write-Ok "WSL already terpasang"
 } catch {
-    Tulis-Info "WSL belum terpasang — akan dipasang di tahap 2"
+    Write-Info "WSL not yet terinstall — akan diinstall di stage 2"
 }
 
-# Ubuntu sudah ada?
-$ubuntuAda = $false
-if ($wslAda) {
-    $daftar = wsl -l -q 2>$null
-    if ($daftar -match $DISTRO) {
-        $ubuntuAda = $true
-        Tulis-Ok "Ubuntu sudah terpasang di WSL"
+# Ubuntu already ada?
+$hasUbuntu = $false
+if ($hasWsl) {
+    $list = wsl -l -q 2>$null
+    if ($list -match $DISTRO) {
+        $hasUbuntu = $true
+        Write-Ok "Ubuntu already terinstall di WSL"
     } else {
-        Tulis-Info "Ubuntu belum ada di WSL — akan dipasang di tahap 2"
+        Write-Info "Ubuntu not yet ada di WSL — akan diinstall di stage 2"
     }
 }
 
-if ($Tes) {
+if ($Test) {
     Write-Host ""
-    Tulis-Ok "PEMERIKSAAN SELESAI - mode tes, tidak ada yang diubah"
+    Write-Ok "PEMERIKSAAN COMPLETE - mode tes, none yang diubah"
     exit 0
 }
 
 # ===========================================================================
-# TAHAP 2 — PASANG WSL2 + UBUNTU
+# STAGE 2 — PASANG WSL2 + UBUNTU
 # ===========================================================================
-Tulis-Judul "TAHAP 2 dari 5 - WSL2 + UBUNTU"
+Write-Title "STAGE 2 of 5 - WSL2 + UBUNTU"
 
-if (-not $wslAda) {
-    Tulis-Info "memasang WSL2 (perlu beberapa menit)..."
+if (-not $hasWsl) {
+    Write-Info "installing WSL2 (perlu beberapa menit)..."
     wsl --install --no-distribution
-    Tulis-Ok "WSL2 dipasang"
+    Write-Ok "WSL2 dipasang"
     Write-Host ""
-    Tulis-Gagal "RESTART DIPERLUKAN"
-    Write-Host "  Setelah restart, jalankan skrip ini lagi:" -ForegroundColor Yellow
+    Write-Fail "RESTART DIPERLUKAN"
+    Write-Host "  After the restart, run this script again:" -ForegroundColor Yellow
     Write-Host "     .\install.ps1" -ForegroundColor White
     exit 0
 }
 
-if (-not $ubuntuAda) {
-    Tulis-Info "memasang Ubuntu di WSL..."
+if (-not $hasUbuntu) {
+    Write-Info "installing Ubuntu di WSL..."
     wsl --install -d $DISTRO
     Write-Host ""
-    Write-Host "  Ubuntu akan meminta Anda membuat USERNAME dan PASSWORD." -ForegroundColor Yellow
+    Write-Host "  Ubuntu akan meminta you creating USERNAME dan PASSWORD." -ForegroundColor Yellow
     Write-Host "  CATAT baik-baik - akan dipakai lagi nanti." -ForegroundColor Yellow
     Write-Host ""
-    Read-Host "  Tekan Enter setelah selesai membuat akun Ubuntu"
+    Read-Host "  Press Enter once the Ubuntu account is created"
 
     # Pastikan versi 2
-    Tulis-Info "memastikan WSL versi 2..."
+    Write-Info "memastikan WSL versi 2..."
     wsl --set-version $DISTRO 2 2>$null
 }
-Tulis-Ok "Ubuntu siap di WSL"
+Write-Ok "Ubuntu ready di WSL"
 
-# Ambil username Ubuntu
-$userUbuntu = (wsl -d $DISTRO -e whoami).Trim()
-Tulis-Ok "username Ubuntu: $userUbuntu"
+# Ambil Ubuntu username
+$ubuntuUser = (wsl -d $DISTRO -e whoami).Trim()
+Write-Ok "Ubuntu username: $ubuntuUser"
 
 # ===========================================================================
-# TAHAP 3 — JALANKAN PEMASANG LINUX DI DALAM UBUNTU
+# STAGE 3 — JALANKAN PEMASANG LINUX DI DALAM UBUNTU
 # ===========================================================================
-Tulis-Judul "TAHAP 3 dari 5 - MEMASANG KOMPONEN (di dalam Ubuntu)"
+Write-Title "STAGE 3 of 5 - INSTALLING COMPONENTS (di dalam Ubuntu)"
 
-Tulis-Info "menyiapkan alat dasar di Ubuntu..."
+Write-Info "preparing base tools in Ubuntu..."
 wsl -d $DISTRO -u root -e bash -c "apt-get update -qq && apt-get install -y -qq git curl rsync" 2>$null
 
 # ===========================================================================
-# CEK DULU: apakah Hermes sudah ada di dalam Ubuntu?
-# Kalau sudah, cukup pakai yang ada - jangan pasang ulang.
+# CHECK FIRST: is Hermes already present inside Ubuntu?
+# If already, cukup pakai yang ada - jangan install ulang.
 # ===========================================================================
-Tulis-Info "memeriksa apakah Hermes sudah terpasang di Ubuntu..."
-$cekHermes = (wsl -d $DISTRO -u $userUbuntu -e bash -lc "command -v hermes || ls ~/.local/bin/hermes 2>/dev/null || ls ~/.hermes/bin/hermes 2>/dev/null || echo TIDAKADA" 2>$null)
-if ($cekHermes -and $cekHermes.Trim() -ne "TIDAKADA" -and $cekHermes -notmatch "TIDAKADA") {
-    Tulis-Ok "Hermes SUDAH ADA di Ubuntu: $($cekHermes.Trim())"
-    Tulis-Info "   tidak dipasang ulang - langsung lanjut ke tahap berikutnya"
-    $HermesSudahAda = $true
+Write-Info "checking whether Hermes is already installed in Ubuntu..."
+$hermesCheck = (wsl -d $DISTRO -u $ubuntuUser -e bash -lc "command -v hermes || ls ~/.local/bin/hermes 2>/dev/null || ls ~/.hermes/bin/hermes 2>/dev/null || echo NOADA" 2>$null)
+if ($hermesCheck -and $hermesCheck.Trim() -ne "NOADA" -and $hermesCheck -notmatch "NOADA") {
+    Write-Ok "Hermes ALREADY PRESENT in Ubuntu: $($hermesCheck.Trim())"
+    Write-Info "   not reinstalled - continuing to the next stage"
+    $HermesExists = $true
 } else {
-    Tulis-Info "Hermes belum ada - akan dipasang"
-    $HermesSudahAda = $false
+    Write-Info "Hermes not found - will be installed"
+    $HermesExists = $false
 }
 Write-Host ""
 
-# Salin repo ke dalam Ubuntu (kalau dijalankan dari Windows)
-$lokasiSkrip = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoDiWsl = "/tmp/hermes-custom"
+# Copy the repo into Ubuntu (when run from Windows)
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoInWsl = "/tmp/hermes-custom"
 
-Tulis-Info "menyalin berkas pemasang ke Ubuntu..."
-$pathWindows = (Get-Item $lokasiSkrip).FullName
-wsl -d $DISTRO -u root -e bash -c "rm -rf $repoDiWsl && mkdir -p $repoDiWsl && cp -a '/mnt/$(($pathWindows -replace '\\','/') -replace '^([A-Za-z]):', '$1')/.' $repoDiWsl/ 2>/dev/null || true"
+Write-Info "copying installer files into Ubuntu..."
+$windowsPath = (Get-Item $scriptPath).FullName
+wsl -d $DISTRO -u root -e bash -c "rm -rf $repoInWsl && mkdir -p $repoInWsl && cp -a '/mnt/$(($windowsPath -replace '\\','/') -replace '^([A-Za-z]):', '$1')/.' $repoInWsl/ 2>/dev/null || true"
 
-$opsi = ""
-if ($LewatiStt) { $opsi = "--tanpa-stt" }
+$options = ""
+if ($SkipStt) { $options = "--tanpa-stt" }
 
-Tulis-Info "menjalankan pemasang Linux..."
-Write-Host "  (ini bagian terpanjang - 15 sampai 30 menit)" -ForegroundColor Yellow
+Write-Info "running the Linux installer..."
+Write-Host "  (this is the longest part - 15 to 30 minutes)" -ForegroundColor Yellow
 Write-Host ""
 
-wsl -d $DISTRO -u root -e bash -c "cd $repoDiWsl && chmod +x install.sh && ./install.sh $opsi"
+wsl -d $DISTRO -u root -e bash -c "cd $repoInWsl && chmod +x install.sh && ./install.sh $options"
 
 if ($LASTEXITCODE -ne 0) {
-    Tulis-Gagal "Pemasang melaporkan masalah. Periksa keluaran di atas."
+    Write-Fail "The installer reported a problem. Check the output above."
 } else {
-    Tulis-Ok "komponen dasar terpasang"
+    Write-Ok "komponen dasar terpasang"
 }
 
 # ===========================================================================
-# TAHAP 4 — AUTOSTART (TASK SCHEDULER)
+# STAGE 4 — AUTOSTART (TASK SCHEDULER)
 # ===========================================================================
-Tulis-Judul "TAHAP 4 dari 5 - AUTOSTART"
+Write-Title "STAGE 4 of 5 - AUTOSTART"
 
-$namaTask = "AI Agent Gateway"
-$perintah = "wsl.exe -d $DISTRO -u $userUbuntu -e bash -lc '~/.local/bin/hermes gateway'"
+$taskName = "AI Agent Gateway"
+$command = "wsl.exe -d $DISTRO -u $ubuntuUser -e bash -lc '~/.local/bin/hermes gateway'"
 
-Tulis-Info "mendaftarkan autostart..."
-schtasks /create /tn "$namaTask" /tr "$perintah" /sc onstart /ru SYSTEM /rl HIGHEST /f 2>$null | Out-Null
+Write-Info "mendaftarkan autostart..."
+schtasks /create /tn "$taskName" /tr "$command" /sc onstart /ru SYSTEM /rl HIGHEST /f 2>$null | Out-Null
 
 if ($LASTEXITCODE -eq 0) {
-    Tulis-Ok "autostart terdaftar — nyala sendiri saat Windows dinyalakan"
+    Write-Ok "autostart terdaftar — nyala sendiri saat Windows dinyalakan"
 } else {
-    Tulis-Gagal "pendaftaran gagal. Daftarkan manual lewat Task Scheduler."
+    Write-Fail "pendaftaran gagal. Daftarkan manual lewat Task Scheduler."
     Write-Host "     Lihat: docs/WINDOWS.md bagian 'Langkah 3'" -ForegroundColor Yellow
 }
 
 # ===========================================================================
-# TAHAP 5 — GILIRAN ANDA
+# STAGE 5 — YOUR TURN
 # ===========================================================================
-Tulis-Judul "TAHAP 5 dari 5 - GILIRAN ANDA (sekitar 5 menit)"
+Write-Title "STAGE 5 of 5 - YOUR TURN (sekitar 5 menit)"
 
 Write-Host @"
 
-  Pemasangan teknis SUDAH SELESAI.
-  Empat langkah berikut butuh Anda - karena hanya Anda yang punya kuncinya.
+  Pemasangan teknis SUDAH COMPLETE.
+  Empat langkah berikut butuh you - karena hanya you yang punya kuncinya.
 
 "@ -ForegroundColor White
 
@@ -252,13 +252,13 @@ Write-Host "  |  1. JARINGAN AMAN (otomatis)                            |" -Fore
 Write-Host "  +---------------------------------------------------------+" -ForegroundColor Cyan
 Write-Host @"
 
-     Kalau Anda menerima kunci dari teknisi, langkah ini sudah otomatis.
-     Kalau tidak, buka Ubuntu dan jalankan:
+     If you menerima kunci dari teknisi, langkah ini already otomatis.
+     If not, open Ubuntu and run:
 
         wsl -d Ubuntu
         sudo tailscale up --ssh
 
-     PENTING: pasang Tailscale di WINDOWS juga (bukan hanya di Ubuntu)
+     PENTING: install Tailscale di WINDOWS juga (bukan hanya di Ubuntu)
      supaya remote view bisa diakses dari HP/laptop:
         winget install --id Tailscale.Tailscale
 
@@ -269,7 +269,7 @@ Write-Host "  |  2. AKUN AI - WAJIB                                     |" -Fore
 Write-Host "  +---------------------------------------------------------+" -ForegroundColor Cyan
 Write-Host @"
 
-     Buka Ubuntu, lalu jalankan:
+     Open Ubuntu, then run:
 
         wsl -d Ubuntu
         hermes setup --portal
@@ -283,12 +283,12 @@ Write-Host "  |  3. WHATSAPP (opsional)                                 |" -Fore
 Write-Host "  +---------------------------------------------------------+" -ForegroundColor Cyan
 Write-Host @"
 
-     Mode SELF-CHAT: robot hanya membalas pesan Anda sendiri.
+     SELF-CHAT mode: the robot only replies to your own messages.
 
      a. Di Ubuntu, nyalakan remote view:
           ~/.hermes/remote-view/remote-view.sh start
           ~/.hermes/remote-view/remote-view.sh password
-     b. Jalankan jembatan port (di PowerShell Administrator):
+     b. Run jembatan port (di PowerShell Administrator):
           netsh interface portproxy add v4tov4 listenport=6080 listenaddress=0.0.0.0 connectport=6080 connectaddress=(wsl hostname -I).Trim()
      c. Buka:  http://<IP-Tailscale-Windows>:6080/vnc.html
      d. Pindai QR WhatsApp
@@ -308,11 +308,11 @@ Write-Host @"
 "@ -ForegroundColor White
 
 Write-Host "=== RINGKASAN ===" -ForegroundColor Cyan
-Tulis-Ok "Hermes             terpasang (di dalam WSL Ubuntu)"
-Tulis-Ok "WhatsApp           http://localhost:8081"
-Tulis-Ok "Pencarian          http://localhost:8080"
-Tulis-Ok "Autostart          Task Scheduler aktif"
+Write-Ok "Hermes             installed (inside WSL Ubuntu)"
+Write-Ok "WhatsApp           http://localhost:8081"
+Write-Ok "Pencarian          http://localhost:8080"
+Write-Ok "Autostart          Task Scheduler aktif"
 Write-Host ""
 Write-Host "  Panduan lengkap: docs/WINDOWS.md" -ForegroundColor Yellow
-Write-Host "  Selamat! Sistemnya sudah jadi." -ForegroundColor Green
+Write-Host "  Selamat! Sistemnya already jadi." -ForegroundColor Green
 Write-Host ""

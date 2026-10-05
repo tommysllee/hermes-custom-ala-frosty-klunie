@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================================
-#  install-mac.sh — Pemasang AI Agent Bisnis untuk macOS
+#  install-mac.sh — Business AI Agent installer for macOS
 # ============================================================================
 #  macOS tidak punya apt dan tidak punya systemd, jadi pemasangnya berbeda
-#  dari Linux. Skrip ini memasang komponennya lewat Homebrew + pip,
+#  from Linux. This script installs components via Homebrew + pip,
 #  lalu mendaftarkan autostart lewat LaunchAgent.
 #
 #  CARA PAKAI
@@ -18,8 +18,8 @@
 #  ---------------------------------------------------------------------------
 #  PERINGATAN PENTING
 #    Kalau FileVault aktif, MacBook BERHENTI di layar login setelah restart.
-#    Sebelum ada yang login, robot TIDAK jalan.
-#    Baca docs/MAC.md sebelum memakai ini untuk keperluan 24/7.
+#    Before anyone logs in, the robot does NOT run.
+#    Read docs/MAC.md before using this for 24/7 duty.
 #  ----------------------------------------------------------------------------
 set -uo pipefail
 
@@ -44,10 +44,10 @@ else
   HIJAU=""; MERAH=""; KUNING=""; BIRU=""; OFF=""
 fi
 ok()    { printf '%s  ✓%s %s\n' "$HIJAU" "$OFF" "$*"; }
-gagal() { printf '%s  ✗%s %s\n' "$MERAH" "$OFF" "$*"; }
+fail() { printf '%s  ✗%s %s\n' "$MERAH" "$OFF" "$*"; }
 info()  { printf '%s  →%s %s\n' "$KUNING" "$OFF" "$*"; }
-judul() { printf '\n%s═══ %s ═══%s\n' "$BIRU" "$*" "$OFF"; }
-jalan() { if [ "$TES" = "1" ]; then printf '      [tes] %s\n' "$*"; return 0; fi; eval "$@" >>"$LOG" 2>&1; }
+title() { printf '\n%s═══ %s ═══%s\n' "$BIRU" "$*" "$OFF"; }
+run() { if [ "$TES" = "1" ]; then printf '      [tes] %s\n' "$*"; return 0; fi; eval "$@" >>"$LOG" 2>&1; }
 
 cat <<'SAMPUL'
 ╔════════════════════════════════════════════════════════════════════╗
@@ -55,7 +55,7 @@ cat <<'SAMPUL'
 ║          P E M A S A N G   A I   A G E N T   B I S N I S           ║
 ║                          (macOS)                                   ║
 ║                                                                    ║
-║   Catatan: robot hanya hidup SETELAH Anda login ke Mac.            ║
+║   Note: the robot only runs AFTER you log in to the Mac.           ║
 ║   Kalau butuh 24/7, pakai komputer Linux. Lihat docs/MAC.md.       ║
 ║                                                                    ║
 ╚════════════════════════════════════════════════════════════════════╝
@@ -66,10 +66,10 @@ info "Catatan lengkap: $LOG"
 # ===========================================================================
 # TAHAP 1 — PERIKSA
 # ===========================================================================
-judul "TAHAP 1 dari 5 — MEMERIKSA SISTEM"
+title "TAHAP 1 dari 5 — MEMERIKSA SISTEM"
 
 if [ "$(uname)" != "Darwin" ]; then
-  gagal "skrip ini khusus macOS"
+  fail "skrip ini khusus macOS"
   info "Untuk Linux pakai: ./install.sh"
   info "Untuk Windows pakai: .\\install.ps1"
   exit 1
@@ -78,12 +78,12 @@ fi
 MACOS_VER="$(sw_vers -productVersion)"
 MACOS_NAMA="$(sw_vers -productName)"
 ARCH="$(uname -m)"
-info "Sistem : $MACOS_NAMA $MACOS_VER ($ARCH)"
+info "Sistem : $MACOS_NAME $MACOS_VER ($ARCH)"
 
 # Versi minimal
 VERSI_UTAMA="${MACOS_VER%%.*}"
 if [ "${VERSI_UTAMA:-0}" -lt 12 ]; then
-  gagal "butuh macOS 12 atau lebih baru"
+  fail "butuh macOS 12 atau lebih baru"
   exit 1
 fi
 ok "versi macOS didukung"
@@ -91,8 +91,8 @@ ok "versi macOS didukung"
 # Ruang disk
 RUANG_GB=$(df -g / 2>/dev/null | tail -1 | awk '{print $4}')
 info "ruang disk : ${RUANG_GB:-?} GB"
-if [ -n "${RUANG_GB:-}" ] && [ "$RUANG_GB" -lt 18 ]; then
-  gagal "ruang kurang dari 18 GB"
+if [ -n "${RUANG_GB:-}" ] && [ "$SPACE_GB" -lt 18 ]; then
+  fail "ruang kurang dari 18 GB"
   exit 1
 fi
 ok "ruang cukup"
@@ -108,13 +108,13 @@ fi
 # Internet
 curl -fsS --max-time 10 https://example.com >/dev/null 2>&1 \
   && ok "internet tersambung" \
-  || { gagal "tidak ada internet"; exit 1; }
+  || { fail "tidak ada internet"; exit 1; }
 
 # FileVault — peringatan penting
 FV="$(fdesetup status 2>/dev/null || echo 'tidak diketahui')"
 if echo "$FV" | grep -qi "On"; then
   echo
-  gagal "FileVault AKTIF"
+  fail "FileVault ACTIVE"
   cat <<'FVW'
 
      Ini penting: dengan FileVault aktif, MacBook berhenti di
@@ -125,7 +125,7 @@ if echo "$FV" | grep -qi "On"; then
        System Settings -> Users & Groups -> Automatically log in as
 
      Ingat: FileVault tetap aktif. Sandi boot tetap diminta saat
-     pertama menyalakan. Auto-login hanya berlaku setelah disk terbuka.
+     the first boot. Auto-login only applies once the disk is unlocked.
 
      Kalau butuh robot yang selalu hidup -> pakai komputer Linux.
 FVW
@@ -136,13 +136,13 @@ fi
 
 # Xcode Command Line Tools (dibutuhkan Homebrew)
 if ! xcode-select -p >/dev/null 2>&1; then
-  info "memasang Xcode Command Line Tools (muncul jendela, klik Install)..."
-  jalan "xcode-select --install"
+  info "installing Xcode Command Line Tools (a window appears, click Install)..."
+  run "xcode-select --install"
   echo
   info "Tunggu sampai selesai, lalu ULANGI skrip ini."
   exit 0
 fi
-ok "alat pengembang siap"
+ok "alat pengembang ready"
 
 if [ "$TES" = "1" ]; then
   echo; ok "PEMERIKSAAN SELESAI — mode tes"; exit 0
@@ -151,42 +151,42 @@ fi
 # ===========================================================================
 # TAHAP 2 — HOMEBREW + KOMPONEN DASAR
 # ===========================================================================
-judul "TAHAP 2 dari 5 — KOMPONEN DASAR"
+title "TAHAP 2 dari 5 — KOMPONEN DASAR"
 
 # Homebrew
 if command -v brew >/dev/null 2>&1; then
-  ok "Homebrew sudah ada"
+  ok "Homebrew already present"
 else
-  info "memasang Homebrew (akan minta sandi Anda)..."
+  info "installing Homebrew (it will ask for your password)..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" >>"$LOG" 2>&1
   # Tambahkan ke PATH (Apple Silicon vs Intel)
   if [ -x /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
   fi
-  command -v brew >/dev/null 2>&1 && ok "Homebrew dipasang" || { gagal "Homebrew gagal"; exit 1; }
+  command -v brew >/dev/null 2>&1 && ok "Homebrew dipasang" || { fail "Homebrew gagal"; exit 1; }
 fi
 
 # Docker Desktop
 if command -v docker >/dev/null 2>&1; then
-  ok "Docker sudah ada"
+  ok "Docker already present"
 else
-  info "memasang Docker Desktop (unduhan besar)..."
-  jalan "brew install --cask docker"
+  info "installing Docker Desktop (large download)..."
+  run "brew install --cask docker"
   ok "Docker Desktop dipasang"
   info "BUKA aplikasi Docker sekali dari Applications — robot butuh itu"
 fi
 
 # Alat tambahan
-info "memasang alat pendukung..."
-jalan "brew install python3 ffmpeg imagemagick git rsync"
-ok "alat pendukung siap"
+info "installing support tools..."
+run "brew install python3 ffmpeg imagemagick git rsync"
+ok "support tools ready"
 
 # Hermes
 # ---------------------------------------------------------------------------
-# DETEKSI HERMES YANG SUDAH ADA — kalau sudah dipasang, cukup pakai.
+# DETECT EXISTING HERMES — if already installed, just use it.
 # ---------------------------------------------------------------------------
-cari_hermes() {
+find_hermes() {
   if command -v hermes >/dev/null 2>&1; then command -v hermes; return 0; fi
   for c in "$HOME/.local/bin/hermes" "$HOME/.hermes/bin/hermes" \
            "/usr/local/bin/hermes" "/opt/homebrew/bin/hermes" \
@@ -203,57 +203,57 @@ cari_hermes() {
 
 HERMES_BIN="$(cari_hermes)"
 if [ -n "$HERMES_BIN" ]; then
-  info "Hermes SUDAH ADA di komputer ini:"
+  info "Hermes ALREADY PRESENT on this machine:"
   info "   $HERMES_BIN"
   if ! command -v hermes >/dev/null 2>&1; then
     mkdir -p "$HOME/.local/bin"
     ln -sf "$HERMES_BIN" "$HOME/.local/bin/hermes" 2>/dev/null || true
     export PATH="$HOME/.local/bin:$PATH"
-    info "   dipasang tautan agar perintah 'hermes' bisa dipakai"
+    info "   symlink created so the 'hermes' command works"
   fi
   VERSI_HERMES=$("$HERMES_BIN" --version 2>/dev/null | head -1)
-  [ -n "$VERSI_HERMES" ] && ok "Hermes siap dipakai ($VERSI_HERMES)" \
-                         || ok "Hermes siap dipakai"
-  info "   tidak dipasang ulang — langsung lanjut ke tahap berikutnya"
+  [ -n "$VERSI_HERMES" ] && ok "Hermes ready to use ($VERSI_HERMES)" \
+                         || ok "Hermes ready to use"
+  info "   not reinstalled — continuing to the next stage"
 else
-  info "Hermes belum ada — memasang..."
-  jalan "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+  info "Hermes not found — installing..."
+  run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
   export PATH="$HOME/.local/bin:$PATH"
   HERMES_BIN="$(cari_hermes)"
-  [ -n "$HERMES_BIN" ] && ok "Hermes dipasang" || { gagal "Hermes gagal"; exit 1; }
+  [ -n "$HERMES_BIN" ] && ok "Hermes dipasang" || { fail "Hermes failed"; exit 1; }
 fi
 
 # Tailscale
 if command -v tailscale >/dev/null 2>&1; then
-  ok "Tailscale sudah ada"
+  ok "Tailscale already present"
 else
-  info "memasang Tailscale..."
-  jalan "brew install --cask tailscale"
-  ok "Tailscale dipasang (buka aplikasinya untuk login)"
+  info "installing Tailscale..."
+  run "brew install --cask tailscale"
+  ok "Tailscale installed (buka aplikasinya untuk login)"
 fi
 
 # Camoufox
 if [ -x "$HOME/.cache/camoufox/camoufox-bin" ] || [ -d "$HOME/Library/Caches/camoufox" ]; then
-  ok "Camoufox sudah ada"
+  ok "Camoufox already present"
 else
-  info "mengunduh Camoufox (~1,3 GB)..."
+  info "downloading Camoufox (~1,3 GB)..."
   PY="$(command -v python3)"
-  "$PY" -c "import camoufox" 2>/dev/null || jalan "$PY -m pip install --user -q camoufox"
-  jalan "$PY" -m camoufox fetch
+  "$PY" -c "import camoufox" 2>/dev/null || run "$PY -m pip install --user -q camoufox"
+  run "$PY" -m camoufox fetch
   ok "Camoufox selesai (atau akan dicoba lagi nanti)"
 fi
 
 # ===========================================================================
 # TAHAP 3 — PENGATURAN
 # ===========================================================================
-judul "TAHAP 3 dari 5 — PENGATURAN"
+title "TAHAP 3 dari 5 — PENGATURAN"
 
 HERMES_HOME="$HOME/.hermes"
 CONFIG="$HERMES_HOME/config.yaml"
 mkdir -p "$HERMES_HOME/remote-view" "$HERMES_HOME/scripts" "$HERMES_HOME/logs"
 
 if [ ! -f "$CONFIG" ] || ! grep -q "dibuat-oleh-installer" "$CONFIG" 2>/dev/null; then
-  [ -f "$CONFIG" ] && cp -a "$CONFIG" "$CONFIG.sebelum-install-$(date +%Y%m%d_%H%M)"
+  [ -f "$CONFIG" ] && cp -a "$CONFIG" "$CONFIG.before-install-$(date +%Y%m%d_%H%M)"
   cat > "$CONFIG" <<'YAML'
 # dibuat-oleh-installer — AI Agent Bisnis (macOS)
 agent:
@@ -276,19 +276,19 @@ terminal:
   backend: local
   timeout: 180
 YAML
-  ok "pengaturan dasar ditulis"
+  ok "base settings written"
 else
-  info "pengaturan sudah ada — tidak ditimpa"
+  info "settings already exist — not overwritten"
 fi
 
 # Suara lokal
 if [ "$TANPA_STT" = "0" ]; then
   PY="$(command -v python3)"
-  if "$PY" -c "import faster_whisper" 2>/dev/null; then ok "mesin suara lokal siap"
+  if "$PY" -c "import faster_whisper" 2>/dev/null; then ok "local speech engine ready"
   else
-    info "memasang mesin suara lokal..."
+    info "installing local speech engine..."
     "$PY" -m pip install --user -q faster-whisper 2>>"$LOG" \
-      && ok "mesin suara lokal siap" || info "suara lokal gagal — bisa dicoba nanti"
+      && ok "local speech engine ready" || info "suara lokal gagal — bisa dicoba nanti"
   fi
 fi
 
@@ -323,12 +323,12 @@ case "${1:-status}" in
 esac
 RVS
 chmod +x "$HERMES_HOME/remote-view/remote-view.sh"
-ok "remote view disiapkan (pakai VNC bawaan macOS)"
+ok "remote view direadykan (pakai VNC bawaan macOS)"
 
 # ===========================================================================
 # TAHAP 4 — AUTOSTART (LaunchAgent)
 # ===========================================================================
-judul "TAHAP 4 dari 5 — OTOMATISASI"
+title "TAHAP 4 dari 5 — OTOMATISASI"
 
 LA_DIR="$HOME/Library/LaunchAgents"
 mkdir -p "$LA_DIR"
@@ -369,14 +369,14 @@ launchctl unload "$PLIST" 2>/dev/null || true
 if launchctl load "$PLIST" 2>>"$LOG"; then
   launchctl start com.hermes.gateway 2>/dev/null || true
   ok "autostart terdaftar (LaunchAgent)"
-  info "berjalan setelah Anda login ke Mac"
+  info "runs after you log in to the Mac"
 else
-  gagal "pendaftaran autostart gagal — lihat docs/MAC.md"
+  fail "pendaftaran autostart gagal — lihat docs/MAC.md"
 fi
 
 # Cegah tidur saat colok listrik
 info "mencegah Mac tidur saat colok listrik..."
-jalan "sudo pmset -c sleep 0 disablesleep 1"
+run "sudo pmset -c sleep 0 disablesleep 1"
 ok "Mac tidak akan tidur saat colok listrik"
 
 # Backup otomatis
@@ -398,20 +398,20 @@ chmod +x "$HERMES_HOME/scripts/backup-agent.sh"
 ) | crontab - 2>/dev/null || true
 # Verifikasi NYATA — jangan percaya exit code saja
 if crontab -l 2>/dev/null | grep -q 'backup-agent.sh'; then
-  ok "backup otomatis 2x sehari aktif"
+  ok "automatic backup 2x sehari aktif"
 else
-  info "backup otomatis belum terdaftar — cek System Settings > Privacy > Full Disk Access"
+  info "automatic backup not registered — check System Settings > Privacy > Full Disk Access"
 fi
 
 # ===========================================================================
 # TAHAP 5 — GILIRAN ANDA
 # ===========================================================================
-judul "TAHAP 5 dari 5 — GILIRAN ANDA (sekitar 5 menit)"
+title "TAHAP 5 dari 5 — GILIRAN ANDA (sekitar 5 menit)"
 
 cat <<'PESAN'
 
   Pemasangan teknis SUDAH SELESAI.
-  Empat langkah berikut butuh Anda.
+  The following steps need YOU.
 
 PESAN
 
@@ -445,7 +445,7 @@ echo "  │  3. WHATSAPP (opsional)                                 │"
 echo "  └─────────────────────────────────────────────────────────┘"
 cat <<'WA'
 
-     Mode SELF-CHAT: robot hanya membalas pesan Anda sendiri.
+     SELF-CHAT mode: the robot only replies to your own messages.
 
         docker compose -f ~/evolution/docker-compose.yml up -d
         open http://localhost:8081/manager
@@ -469,12 +469,12 @@ echo "   RINGKASAN"
 echo "  ═══════════════════════════════════════════════════════════════"
 echo
 ok "Hermes          terpasang"
-ok "Suara lokal     siap (tanpa API key)"
+ok "Suara lokal     ready (tanpa API key)"
 ok "Tailscale       terpasang"
 ok "Autostart       LaunchAgent terdaftar"
 ok "Anti-tidur      aktif saat colok listrik"
 echo
-gagal "INGAT: robot hidup SETELAH Anda login ke Mac"
+fail "REMEMBER: the robot runs AFTER you log in to the Mac"
 info "Kalau butuh 24/7, pakai komputer Linux — lihat docs/MAC.md"
 info "Catatan lengkap: $LOG"
 echo

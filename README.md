@@ -16,7 +16,7 @@ Tidak perlu paham Git. Tidak perlu unduh apa pun.
 ### 🐧 Ubuntu / Debian (server, VPS, mini PC) — paling disarankan
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.sh | bash
 ```
 
 ### 🪟 Windows 10/11
@@ -25,7 +25,7 @@ Buka **PowerShell sebagai Administrator** (klik kanan → *Run as administrator*
 lalu tempel:
 
 ```powershell
-irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.ps1 | iex
+irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.ps1 | iex
 ```
 
 ### 🍎 MacBook
@@ -33,13 +33,13 @@ irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bis
 Buka **Terminal**, lalu tempel:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang-mac.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap-mac.sh | bash
 ```
 
 **Mau cek dulu tanpa memasang apa pun?**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/pasang.sh | bash -s -- --tes
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.sh | bash -s -- --tes
 ```
 
 ---
@@ -48,9 +48,9 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whats
 
 | Sistem Anda | Satu perintah | Panduan |
 |---|---|---|
-| **Ubuntu / Debian** | `pasang.sh` | [docs/LINUX.md](docs/LINUX.md) |
-| **Windows 10/11** | `pasang.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
-| **MacBook** | `pasang-mac.sh` | [docs/MAC.md](docs/MAC.md) |
+| **Ubuntu / Debian** | `bootstrap.sh` | [docs/LINUX.md](docs/LINUX.md) |
+| **Windows 10/11** | `bootstrap.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
+| **MacBook** | `bootstrap-mac.sh` | [docs/MAC.md](docs/MAC.md) |
 
 > **Belum yakin?** Ubuntu/Debian memberi hasil terbaik dan paling stabil.
 
