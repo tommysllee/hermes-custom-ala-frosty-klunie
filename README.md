@@ -1,19 +1,19 @@
-# AI Agent Bisnis — Pemasang Otomatis
+# Business AI Agent — Automatic Installer
 
-**Satu perintah. Otomatis. Siap dipakai untuk bisnis.**
+**One command. Automatic. Ready to use for business.**
 
-Pemasang ini menyiapkan asisten AI lengkap: WhatsApp, Google Sheets,
-backup otomatis, dan akses jarak jauh — semuanya sudah terpasang dan
-menyala sendiri saat komputer dinyalakan.
+This installer sets up a complete AI assistant: WhatsApp, Google Sheets,
+automatic backup, and remote access — all installed and
+starting on their own when the computer is turned on.
 
 ---
 
-## CARA PALING MUDAH — satu perintah, tanpa clone
+## EASIEST WAY — one command, no clone
 
-Tempel **satu baris** ini di terminal, tekan Enter, selesai.
-Tidak perlu paham Git. Tidak perlu unduh apa pun.
+Paste this **one line** into the terminal, press Enter, done.
+No Git knowledge needed. Nothing to download.
 
-### 🐧 Ubuntu / Debian (server, VPS, mini PC) — paling disarankan
+### 🐧 Ubuntu / Debian (server, VPS, mini PC) — most recommended
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.sh | bash
@@ -21,8 +21,8 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whats
 
 ### 🪟 Windows 10/11
 
-Buka **PowerShell sebagai Administrator** (klik kanan → *Run as administrator*),
-lalu tempel:
+Open **PowerShell as Administrator** (right-click → *Run as administrator*),
+then paste:
 
 ```powershell
 irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.ps1 | iex
@@ -30,33 +30,33 @@ irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bis
 
 ### 🍎 MacBook
 
-Buka **Terminal**, lalu tempel:
+Open **Terminal**, then paste:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap-mac.sh | bash
 ```
 
-**Mau cek dulu tanpa memasang apa pun?**
+**Want to check first without installing anything?**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.sh | bash -s -- --tes
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/bootstrap.sh | bash -s -- --test
 ```
 
 ---
 
-## PILIH DULU: Sistem Anda apa?
+## CHOOSE FIRST: What is your system?
 
-| Sistem Anda | Satu perintah | Panduan |
+| Your system | One command | Guide |
 |---|---|---|
 | **Ubuntu / Debian** | `bootstrap.sh` | [docs/LINUX.md](docs/LINUX.md) |
 | **Windows 10/11** | `bootstrap.ps1` | [docs/WINDOWS.md](docs/WINDOWS.md) |
 | **MacBook** | `bootstrap-mac.sh` | [docs/MAC.md](docs/MAC.md) |
 
-> **Belum yakin?** Ubuntu/Debian memberi hasil terbaik dan paling stabil.
+> **Not sure yet?** Ubuntu/Debian gives the best and most stable results.
 
 ---
 
-## Cara pakai dengan clone (kalau Anda sudah paham Git)
+## How to use with clone (if you already know Git)
 
 ```bash
 git clone https://github.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview
@@ -66,136 +66,136 @@ cd hermes-custom
 
 ---
 
-## Yang Anda dapat
+## What you get
 
-| Komponen | Kegunaan |
+| Component | Purpose |
 |---|---|
-| **Hermes Agent** | Otak asisten AI-nya |
-| **WhatsApp** | Robot balas pesan (mode self-chat: aman) |
-| **Google Sheets/Drive/Docs** | Baca-tulis spreadsheet & dokumen |
-| **Suara lokal** | Bicara ke asisten, tanpa API key, tanpa biaya |
-| **Pencarian internet** | Tanpa API key (ddgs + SearXNG lokal) |
-| **Browser anti-detect** | Untuk tugas yang butuh login |
-| **Remote web view** | Lihat layar server dari HP/laptop |
-| **Tailscale** | Akses aman dari mana saja |
-| **Backup otomatis** | 2x sehari, ke Google Drive |
-| **Nyala sendiri** | Aktif lagi setelah komputer restart |
+| **Hermes Agent** | The brain of the AI assistant |
+| **WhatsApp** | Message-replying robot (self-chat mode: safe) |
+| **Google Sheets/Drive/Docs** | Read-write spreadsheets & documents |
+| **Local voice** | Talk to the assistant, no API key, no cost |
+| **Internet search** | No API key (ddgs + local SearXNG) |
+| **Anti-detect browser** | For tasks that need login |
+| **Remote web view** | See the server screen from phone/laptop |
+| **Tailscale** | Secure access from anywhere |
+| **Automatic backup** | 2x a day, to Google Drive |
+| **Auto-start** | Runs again after the computer restarts |
 
 ---
 
-## Setelah pemasangan — 5 langkah
+## After installation — 5 steps
 
-### 1. Jaringan aman (otomatis, sudah berjalan)
+### 1. Secure network (automatic, already running)
 
-Kalau Anda menerima kunci dari teknisi, langkah ini **sudah otomatis**.
-Kalau tidak, jalankan:
+If you received a key from the technician, this step is **already automatic**.
+If not, run:
 
 ```bash
 sudo tailscale up --ssh
 ```
 
-### 2. Akun AI — WAJIB
+### 2. AI account — REQUIRED
 
 ```bash
 hermes setup --portal
 ```
 
-Browser akan terbuka. Login sekali, pilih model. **Gratis di awal** —
-tidak perlu menempel API key.
+A browser will open. Log in once, choose a model. **Free to start** —
+no need to paste an API key.
 
-### 3. WhatsApp (opsional)
+### 3. WhatsApp (optional)
 
 ```bash
 ~/.hermes/remote-view/remote-view.sh start
 ~/.hermes/remote-view/remote-view.sh password
 ```
 
-Buka `http://<alamat-tailscale>:8081/manager` → pindai QR.
-Setelah tersambung, **matikan**:
+Open `http://<alamat-tailscale>:8081/manager` → scan the QR.
+Once connected, **turn it off**:
 
 ```bash
 ~/.hermes/remote-view/remote-view.sh stop
 ```
 
-### 4. Google Sheets/Drive/Docs (opsional)
+### 4. Google Sheets/Drive/Docs (optional)
 
 ```bash
 hermes setup tools
 ```
 
-Login sekali lewat tautan yang muncul.
+Log in once via the link that appears.
 
-### 5. Backup ke Google Drive (disarankan)
+### 5. Backup to Google Drive (recommended)
 
-Backup sudah jalan 2x sehari, tapi masih tersimpan di komputer. Kalau
-komputernya rusak, cadangannya hilang. Hubungkan ke Drive — sekali saja:
+Backup already runs 2x a day, but it's still stored on the computer. If
+the computer breaks, the backup is lost. Connect it to Drive — just once:
 
 ```bash
 rclone config
 ```
 
-Ikuti panduan: [docs/BACKUP.md](docs/BACKUP.md)
+Follow the guide: [docs/BACKUP.md](docs/BACKUP.md)
 
 ---
 
-## Butuh bantuan?
+## Need help?
 
-- **Panduan Ubuntu/WSL** — [docs/LINUX.md](docs/LINUX.md)
-- **Panduan Windows** — [docs/WINDOWS.md](docs/WINDOWS.md)
-- **Panduan MacBook** — [docs/MAC.md](docs/MAC.md)
+- **Ubuntu/WSL guide** — [docs/LINUX.md](docs/LINUX.md)
+- **Windows guide** — [docs/WINDOWS.md](docs/WINDOWS.md)
+- **MacBook guide** — [docs/MAC.md](docs/MAC.md)
 - **Backup & Google Drive** — [docs/BACKUP.md](docs/BACKUP.md)
-- **Masalah umum** — [docs/PEMECAHAN.md](docs/PEMECAHAN.md)
+- **Common problems** — [docs/PEMECAHAN.md](docs/PEMECAHAN.md)
 
 ---
 
-## Syarat sistem
+## System requirements
 
-| | Minimal | Disarankan |
+| | Minimum | Recommended |
 |---|---|---|
-| Sistem | Ubuntu 22.04 / Debian 12 | Ubuntu 24.04+ |
-| Ruang disk | 15 GB | 30 GB |
-| Memori | 4 GB | 8 GB |
-| Prosesor | 2 core | 4 core |
+| System | Ubuntu 22.04 / Debian 12 | Ubuntu 24.04+ |
+| Disk space | 15 GB | 30 GB |
+| Memory | 4 GB | 8 GB |
+| Processor | 2 core | 4 core |
 | Windows | Windows 10/11 + WSL2 | - |
 | MacBook | macOS 12+ | macOS 14+ |
 
 ---
 
-## Perintah yang sering dipakai
+## Frequently used commands
 
 ```bash
-hermes                          # mulai mengobrol
-hermes gateway                  # nyalakan robot (otomatis saat boot)
-sudo systemctl status hermes-gateway   # cek status robot
+hermes                          # start chatting
+hermes gateway                  # turn on the robot (automatic at boot)
+sudo systemctl status hermes-gateway   # check robot status
 
-~/.hermes/remote-view/remote-view.sh start    # nyalakan remote view
-~/.hermes/remote-view/remote-view.sh stop     # matikan (hemat & aman)
-~/.hermes/remote-view/remote-view.sh status   # cek status
-~/.hermes/remote-view/remote-view.sh password # lihat sandi
+~/.hermes/remote-view/remote-view.sh start    # turn on remote view
+~/.hermes/remote-view/remote-view.sh stop     # turn off (economical & safe)
+~/.hermes/remote-view/remote-view.sh status   # check status
+~/.hermes/remote-view/remote-view.sh password # view password
 
-~/backups_agent/                # lokasi cadangan data
+~/backups_agent/                # backup data location
 ```
 
 ---
 
-## Opsi pemasangan
+## Installation options
 
 ```bash
-./install.sh --tes              # periksa sistem saja
-./install.sh --tanpa-docker     # tanpa WhatsApp & pencarian
-./install.sh --tanpa-stt        # tanpa suara lokal
+./install.sh --test             # check the system only
+./install.sh --no-docker        # without WhatsApp & search
+./install.sh --no-stt           # without local voice
 ```
 
 ---
 
-## Keamanan
+## Security
 
-- Tidak ada API key atau sandi yang disimpan di repo ini
-- Sandi remote web view dibuat **acak** di komputer Anda, tidak dibagikan
-- Remote web view **hanya** bisa diakses lewat Tailscale
-- Remote web view **tidak** menyala sendiri — hanya saat Anda nyalakan
-- Mode WhatsApp **self-chat**: robot hanya membalas pesan Anda sendiri
+- No API key or password is stored in this repo
+- The remote web view password is generated **randomly** on your computer, not shared
+- Remote web view can **only** be accessed via Tailscale
+- Remote web view does **not** start on its own — only when you turn it on
+- WhatsApp **self-chat** mode: the robot only replies to your own messages
 
 ---
 
-**Terakhir diperbarui: Sabtu, 03 Okt 2026 · 16:55 WIB**
+**Last updated: Saturday, 03 Oct 2026 · 16:55 WIB**

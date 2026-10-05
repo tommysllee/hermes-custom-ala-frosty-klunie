@@ -1,58 +1,58 @@
-# Panduan Windows
+# Windows Guide
 
-> **Terakhir diperbarui: Sabtu, 03 Okt 2026 · 15:25 WIB**
+> **Last updated: Saturday, 03 Oct 2026 · 15:25 WIB**
 
-Windows tidak punya `systemd`. Solusinya: **WSL2 + Ubuntu**, lalu
-autostart lewat **Task Scheduler**.
+Windows doesn't have `systemd`. The solution: **WSL2 + Ubuntu**, then
+autostart via **Task Scheduler**.
 
 ---
 
-## Ringkas
+## Summary
 
 ```
 Windows 10/11
    └── WSL2
-         └── Ubuntu   <- installer berjalan di sini (sama seperti Linux)
-Task Scheduler        <- menyalakan robot saat Windows boot
+         └── Ubuntu   <- the installer runs here (same as Linux)
+Task Scheduler        <- starts the robot when Windows boots
 ```
 
 ---
 
-## Langkah 1 — Pasang WSL2 + Ubuntu (sekali, 10 menit)
+## Step 1 — Install WSL2 + Ubuntu (once, 10 minutes)
 
-Buka **PowerShell sebagai Administrator** (klik kanan → Run as administrator):
+Open **PowerShell as Administrator** (right-click → Run as administrator):
 
 ```powershell
 wsl --install -d Ubuntu
 ```
 
-Restart komputer kalau diminta. Setelah restart, Ubuntu akan terbuka dan
-meminta Anda membuat **username** + **password** — catat baik-baik.
+Restart the computer if asked. After restarting, Ubuntu will open and
+ask you to create a **username** + **password** — write them down carefully.
 
-Cek berhasil:
+Check if it worked:
 
 ```powershell
 wsl -l -v
 ```
 
-Harus tampil `Ubuntu` dengan `VERSION 2`.
+It should show `Ubuntu` with `VERSION 2`.
 
-> **Kalau muncul VERSION 1**, ubah:
+> **If VERSION 1 appears**, change it:
 > ```powershell
 > wsl --set-version Ubuntu 2
 > ```
 
 ---
 
-## Langkah 2 — Jalankan installer
+## Step 2 — Run the installer
 
-Masuk ke Ubuntu:
+Enter Ubuntu:
 
 ```powershell
 wsl -d Ubuntu
 ```
 
-Lalu di dalam Ubuntu:
+Then inside Ubuntu:
 
 ```bash
 sudo apt update && sudo apt install -y git
@@ -61,19 +61,19 @@ cd hermes-custom
 ./install.sh
 ```
 
-> **Catatan:** installer akan otomatis melewati bagian autostart systemd
-> (karena WSL tidak memakainya). Itu **normal** — autostart ditangani
-> Task Scheduler di Langkah 3.
+> **Note:** the installer will automatically skip the systemd autostart part
+> (because WSL doesn't use it). That's **normal** — autostart is handled by
+> Task Scheduler in Step 3.
 
 ---
 
-## Langkah 3 — Autostart lewat Task Scheduler
+## Step 3 — Autostart via Task Scheduler
 
-Supaya robot nyala sendiri saat Windows dinyalakan.
+So the robot starts on its own when Windows is turned on.
 
-### Cara 1 — Lewat PowerShell (cepat)
+### Method 1 — Via PowerShell (fast)
 
-Buka **PowerShell sebagai Administrator**:
+Open **PowerShell as Administrator**:
 
 ```powershell
 $user = "USERNAME_UBUNTU_ANDA"
@@ -83,65 +83,65 @@ schtasks /create /tn "AI Agent Gateway" `
   /sc onstart /ru SYSTEM /rl HIGHEST /f
 ```
 
-Ganti `USERNAME_UBUNTU_ANDA` dengan username Ubuntu Anda.
+Replace `USERNAME_UBUNTU_ANDA` with your Ubuntu username.
 
-Cek berhasil:
+Check if it worked:
 
 ```powershell
 schtasks /query /tn "AI Agent Gateway"
 ```
 
-### Cara 2 — Lewat tampilan (kalau lebih suka klik)
+### Method 2 — Via the GUI (if you prefer clicking)
 
 ```
-1. Buka Task Scheduler (cari di Start Menu)
-2. Klik "Create Task..." (BUKAN "Create Basic Task")
-3. Tab General:
+1. Open Task Scheduler (search in the Start Menu)
+2. Click "Create Task..." (NOT "Create Basic Task")
+3. General tab:
      Name        : AI Agent Gateway
      ✅ Run whether user is logged on or not
      ✅ Run with highest privileges
      Configure for: Windows 10 / 11
-4. Tab Triggers -> New...
+4. Triggers tab -> New...
      Begin the task: At startup
      OK
-5. Tab Actions -> New...
+5. Actions tab -> New...
      Action : Start a program
      Program: C:\Windows\System32\wsl.exe
      Arguments: -d Ubuntu -u USERNAME_UBUNTU_ANDA -e bash -lc "~/.local/bin/hermes gateway"
-6. Tab Settings:
+6. Settings tab:
      ✅ Allow task to be run on demand
      ✅ If the task fails, restart every: 1 minute
-7. OK -> masukkan password Windows Anda
+7. OK -> enter your Windows password
 ```
 
 ---
 
-## Langkah 4 — Remote web view & Tailscale dari Windows
+## Step 4 — Remote web view & Tailscale from Windows
 
-Ini bagian yang **paling sering gagal** kalau tidak hati-hati.
+This is the part that **most often fails** if you're not careful.
 
-### Masalahnya
+### The problem
 
 ```
-WSL punya "alamat sendiri" (misal 172.x.x.x) yang TIDAK terlihat
-dari jaringan luar. Tailscale di WSL juga sering tidak jalan mulus.
+WSL has its "own address" (e.g. 172.x.x.x) that is NOT visible
+from the outside network. Tailscale in WSL also often doesn't run smoothly.
 ```
 
-### Solusinya — jalankan Tailscale di WINDOWS, bukan di WSL
+### The solution — run Tailscale on WINDOWS, not in WSL
 
 ```powershell
-# Di PowerShell (Administrator)
+# In PowerShell (Administrator)
 winget install --id Tailscale.Tailscale
 ```
 
-Login Tailscale lewat aplikasi Windows-nya (muncul di system tray).
+Log in to Tailscale via its Windows app (appears in the system tray).
 
-### Jembatani port noVNC dari WSL ke Windows
+### Bridge the noVNC port from WSL to Windows
 
-Buat file `jembatan-port.ps1` di Windows:
+Create a file `jembatan-port.ps1` in Windows:
 
 ```powershell
-# Teruskan port 6080 dari WSL ke Windows (supaya bisa diakses Tailscale)
+# Forward port 6080 from WSL to Windows (so it can be accessed via Tailscale)
 while ($true) {
     $wslIp = (wsl -d Ubuntu hostname -I).Trim().Split()[0]
     Write-Host "Meneruskan http://$wslIp:6080 -> localhost:6080"
@@ -151,10 +151,10 @@ while ($true) {
 }
 ```
 
-Jalankan sekali saat boot (tambahkan ke Task Scheduler dengan trigger
-"At startup", sama seperti Langkah 3).
+Run it once at boot (add it to Task Scheduler with the "At startup"
+trigger, same as Step 3).
 
-Lalu buka dari HP/laptop:
+Then open from phone/laptop:
 
 ```
 http://<IP-Tailscale-Windows>:6080/vnc.html
@@ -162,21 +162,21 @@ http://<IP-Tailscale-Windows>:6080/vnc.html
 
 ---
 
-## Pemecahan masalah Windows
+## Windows troubleshooting
 
-| Gejala | Sebab | Perbaikan |
+| Symptom | Cause | Fix |
 |---|---|---|
-| `wsl --install` gagal | Virtualisasi mati di BIOS | Nyalakan VT-x/AMD-V di BIOS |
-| Installer bilang "autostart dilewati" | Normal di WSL | Lanjutkan Langkah 3 |
-| Robot tidak jalan setelah reboot | Task Scheduler belum dibuat | Ulangi Langkah 3 |
-| Task Scheduler error `0x1` | User/path salah | Cek username Ubuntu: `wsl -d Ubuntu whoami` |
-| noVNC tidak bisa dibuka | Port belum dijembatani | Jalankan `jembatan-port.ps1` |
-| Tailscale tidak jalan di WSL | Normal | Pasang Tailscale di **Windows**, bukan WSL |
-| WSL lambat / makan memori | Batas memori default | Buat `C:\Users\<Anda>\.wslconfig` → lihat di bawah |
+| `wsl --install` fails | Virtualization is off in BIOS | Enable VT-x/AMD-V in BIOS |
+| Installer says "autostart skipped" | Normal in WSL | Continue to Step 3 |
+| Robot doesn't run after reboot | Task Scheduler not created yet | Repeat Step 3 |
+| Task Scheduler error `0x1` | Wrong user/path | Check Ubuntu username: `wsl -d Ubuntu whoami` |
+| noVNC can't be opened | Port not bridged yet | Run `jembatan-port.ps1` |
+| Tailscale doesn't run in WSL | Normal | Install Tailscale on **Windows**, not WSL |
+| WSL slow / eats memory | Default memory limit | Create `C:\Users\<Anda>\.wslconfig` → see below |
 
-### Batasi memori WSL (kalau komputer jadi lambat)
+### Limit WSL memory (if the computer becomes slow)
 
-Buat file `C:\Users\<NAMA-ANDA>\.wslconfig`:
+Create the file `C:\Users\<NAMA-ANDA>\.wslconfig`:
 
 ```ini
 [wsl2]
@@ -185,7 +185,7 @@ processors=4
 swap=2GB
 ```
 
-Lalu restart WSL:
+Then restart WSL:
 
 ```powershell
 wsl --shutdown
@@ -193,13 +193,13 @@ wsl --shutdown
 
 ---
 
-## Yang perlu diingat
+## Things to remember
 
 ```
-1. Windows butuh WSL2 — tidak ada cara lain yang lebih baik.
-2. Autostart di Windows = Task Scheduler (bukan systemd).
-3. Tailscale dipasang di WINDOWS, bukan di WSL.
-4. noVNC butuh jembatan port (portproxy) dari WSL ke Windows.
-5. Laptop Windows yang sering ditutup akan mematikan robot.
-   Kalau butuh yang selalu hidup, pakai komputer yang menyala terus.
+1. Windows needs WSL2 — there is no better way.
+2. Autostart on Windows = Task Scheduler (not systemd).
+3. Tailscale is installed on WINDOWS, not in WSL.
+4. noVNC needs a port bridge (portproxy) from WSL to Windows.
+5. A Windows laptop that is often closed will turn the robot off.
+   If you need something always on, use a computer that stays on.
 ```

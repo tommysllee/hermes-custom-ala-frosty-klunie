@@ -61,6 +61,17 @@ stage() {
 
 info()  { printf '%s  →%s %s\n' "$YELLOW" "$OFF" "$*"; }
 
+# Run a command (with --test, only prints it), logging all output.
+run() {
+  if [ "$TEST_MODE" = "1" ]; then printf '      [test] %s\n' "$*"; return 0; fi
+  eval "$@" >>"$LOG" 2>&1
+}
+
+failure_note() {
+  FAIL_COUNT=$((FAIL_COUNT+1))
+  printf '%s\n' "$1" >>"$LOG"
+}
+
 # Load installer settings if present
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$REPO_DIR/.env" ]; then . "$REPO_DIR/.env"
@@ -159,8 +170,7 @@ curl -fsS --max-time 10 https://example.com >/dev/null 2>&1 \
   && ok "internet reachable" \
   || { fail "no internet connection"; exit 1; }
 
-GAGAL_COUNT=0
-failure_note() { GAGAL_COUNT=$((GAGAL_COUNT+1)); printf '%s\n' "$1" >>"$LOG"; }
+FAIL_COUNT=0
 
 if [ "$TEST_MODE" = "1" ]; then
   echo; ok "CHECK COMPLETE — test mode, nothing was changed"; exit 0

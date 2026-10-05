@@ -1,25 +1,25 @@
-# Panduan Tailscale — Otomatis ke Dashboard Anda
+# Tailscale Guide — Automatically into Your Dashboard
 
-> **Terakhir diperbarui: Sabtu, 03 Okt 2026 · 15:35 WIB**
+> **Last updated: Saturday, 03 Oct 2026 · 15:35 WIB**
 
-Untuk **pemilik tailnet**. Tujuannya: setiap orang yang memasang
-AI agent **otomatis muncul** di dashboard Tailscale Anda, sehingga Anda
-bisa membantu kapan pun tanpa diminta.
+For **tailnet owners**. The goal: everyone who installs the
+AI agent **automatically appears** in your Tailscale dashboard, so you
+can help whenever needed without being asked.
 
-Tag yang dipakai repo ini: **`tag:dipasangintsl`** (sesuai ACL Anda).
+The tag this repo uses: **`tag:dipasangintsl`** (matching your ACL).
 
 ---
 
-## Konsep
+## Concept
 
 ```
-AUTH KEY  = "tiket masuk". Ditanam di repo. Siapa pun yang menjalankan
-            installer otomatis masuk ke tailnet Anda.
-TAG       = label otomatis yang menempel di device: tag:dipasangintsl
-ACL       = aturan izin (sudah Anda siapkan).
+AUTH KEY  = "entry ticket". Embedded in the repo. Anyone who runs the
+            installer automatically joins your tailnet.
+TAG       = automatic label attached to the device: tag:dipasangintsl
+ACL       = permission rules (which you have already set up).
 ```
 
-**ACL Anda sudah benar** (dari console.tailscale.com/acl):
+**Your ACL is already correct** (from console.tailscale.com/acl):
 
 ```json
 {
@@ -47,45 +47,45 @@ ACL       = aturan izin (sudah Anda siapkan).
 }
 ```
 
-**Yang penting dari ACL ini:**
+**What matters about this ACL:**
 
-| Aturan | Artinya |
+| Rule | What it means |
 |---|---|
-| `tagOwners` | Hanya Anda (admin) yang boleh memakai tag ini |
-| Device pribadi saling terhubung | Laptop/HP Anda tetap normal |
-| `admin` → `tag:dipasangintsl` | **Anda** bisa akses semua device yang dipasang repo |
-| SSH `accept` ke `tag:dipasangintsl` | **Anda** bisa SSH ke sana untuk membantu |
-| **Tidak ada aturan klien → klien** | Klien **tidak bisa** saling lihat ✅ |
+| `tagOwners` | Only you (admin) may use this tag |
+| Personal devices stay connected | Your laptop/phone keep working normally |
+| `admin` → `tag:dipasangintsl` | **You** can access all devices installed by the repo |
+| SSH `accept` to `tag:dipasangintsl` | **You** can SSH in to help |
+| **No client → client rules** | Clients **cannot** see each other ✅ |
 
-**Poin penting:** karena ACL Anda tidak memberi aturan antar-device
-ber-tag, privasi pemasang terjaga — A tidak bisa menyentuh B.
+**Key point:** because your ACL grants no rules between tagged
+devices, the installer's privacy is preserved — A cannot touch B.
 
 ---
 
-## Langkah yang tersisa — buat Auth Key (3 menit)
+## Remaining step — create an Auth Key (3 minutes)
 
-1. Buka **https://login.tailscale.com/admin/settings/keys**
+1. Open **https://login.tailscale.com/admin/settings/keys**
 
-2. Klik **Generate auth key...**
+2. Click **Generate auth key...**
 
-3. Isi:
+3. Fill in:
 
 ```
 Description   : repo-pemasang-otomatis
-Reusable      : ✅ ON      <- banyak orang pakai kunci yang sama
-Ephemeral     : ❌ OFF     <- device tetap ada walau sedang offline
-Pre-approved  : ✅ ON      <- tidak perlu Anda approve manual
-Tags          : tag:dipasangintsl   <- WAJIB
+Reusable      : ✅ ON      <- many people use the same key
+Ephemeral     : ❌ OFF     <- device persists even while offline
+Pre-approved  : ✅ ON      <- no manual approval needed from you
+Tags          : tag:dipasangintsl   <- REQUIRED
 Expiration    : 90 days
 ```
 
-4. Klik **Generate key** → **SALIN**.
+4. Click **Generate key** → **COPY** it.
 
-   Bentuknya: `tskey-auth-xxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx`
+   It looks like: `tskey-auth-xxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx`
 
-5. **Tempel ke repo.** Dua cara:
+5. **Paste it into the repo.** Two ways:
 
-### Cara A — Tanam di repo (otomatis penuh)
+### Method A — Embed in the repo (fully automatic)
 
 Edit `installer.env`:
 
@@ -94,10 +94,10 @@ TS_AUTHKEY="tskey-auth-xxxxx"
 TS_TAG="tag:dipasangintsl"
 ```
 
-Siapa pun yang clone lalu jalankan `./install.sh` → **otomatis masuk**
-ke tailnet Anda. Tidak perlu mengetik apa pun.
+Anyone who clones and runs `./install.sh` → **automatically joins**
+your tailnet. No typing required.
 
-### Cara B — Lewat variabel (lebih aman)
+### Method B — Via an environment variable (safer)
 
 ```bash
 TS_AUTHKEY="tskey-auth-xxxxx" ./install.sh
@@ -105,42 +105,42 @@ TS_AUTHKEY="tskey-auth-xxxxx" ./install.sh
 
 ---
 
-## ⚠️ Risiko yang harus Anda sadari
+## ⚠️ Risks you must be aware of
 
 ```
-Kunci di Cara A TERTANAM di repo public.
-Siapa pun yang membaca repo bisa mengambil kunci itu dan memasukkan
-device ke tailnet Anda.
+With Method A the key is EMBEDDED in the public repo.
+Anyone who reads the repo can take that key and add a device
+to your tailnet.
 
-Mitigasi:
-  1. Masa berlaku 90 hari (jangan Forever)
-  2. Pre-approved ON -> Anda bisa lihat & hapus device kapan saja
-  3. Tag wajib -> device asing otomatis terisolasi oleh ACL
-  4. Cek dashboard berkala: https://login.tailscale.com/admin/machines
-  5. Kalau bocor: hapus kunci di halaman keys, buat baru
+Mitigations:
+  1. 90-day expiry (not Forever)
+  2. Pre-approved ON -> you can view & remove devices at any time
+  3. Required tag -> foreign devices are automatically isolated by the ACL
+  4. Check the dashboard regularly: https://login.tailscale.com/admin/machines
+  5. If it leaks: delete the key on the keys page and create a new one
 ```
 
-**Alternatif paling aman:** pakai Cara B — kirim kunci lewat jalur pribadi
-(WhatsApp/Telegram), jangan ditanam di repo.
+**Safest alternative:** use Method B — send the key over a private channel
+(WhatsApp/Telegram), do not embed it in the repo.
 
 ---
 
-## Melihat siapa yang baru pasang
+## Seeing who just installed
 
 ```bash
 tailscale status
 ```
 
-Atau buka **https://login.tailscale.com/admin/machines**
+Or open **https://login.tailscale.com/admin/machines**
 
-Device dari repo ini akan terlihat:
+Devices from this repo will appear as:
 
 ```
-Nama device : hermes-agent-<nama>   (atau nama host pemasang)
-Tag         : tag:dipasangintsl     <- ini penandanya
+Device name : hermes-agent-<name>   (or the installer's hostname)
+Tag         : tag:dipasangintsl     <- this is the marker
 ```
 
-**Cara cepat melihat hanya yang ber-tag:**
+**Quick way to see only the tagged ones:**
 
 ```bash
 tailscale status | grep -i dipasangintsl
@@ -148,116 +148,115 @@ tailscale status | grep -i dipasangintsl
 
 ---
 
-## Membantu pemasang
+## Helping the installer
 
-**Masuk SSH** (ACL sudah mengizinkan):
+**SSH in** (the ACL already allows it):
 
 ```bash
 ssh <username>@100.x.x.x
 ```
 
-**Melihat browser mereka** (kalau mereka nyalakan remote web view):
+**See their browser** (if they turned on the remote web view):
 
 ```
-http://<IP-device>:6080/vnc.html
+http://<device-IP>:6080/vnc.html
 ```
 
-> Sandi remote web view berbeda tiap device dan **hanya ada di mesin mereka**.
-> Minta mereka menjalankan:
+> The remote web view password differs per device and **only exists on their machine**.
+> Ask them to run:
 > `~/.hermes/remote-view/remote-view.sh password`
 
 ---
 
-## Kalau tidak mau otomatis
+## If you don't want it automatic
 
-Installer **tidak pernah memaksa**. Kalau `TS_AUTHKEY` kosong, installer
-hanya menampilkan:
+The installer **never forces anything**. If `TS_AUTHKEY` is empty, the installer
+just shows:
 
 ```
-1. JARINGAN AMAN (otomatis)
-     Jalankan, lalu ikuti tautan:
+1. SECURE NETWORK (automatic)
+     Run this, then follow the link:
         sudo tailscale up --ssh
 ```
 
-Orang itu login dengan akun Tailscale-nya sendiri → device masuk ke
-tailnet **miliknya**, bukan milik Anda. Sah, tapi tidak bisa Anda bantu
-secara langsung.
+That person logs in with their own Tailscale account → the device joins
+**their** tailnet, not yours. Valid, but you cannot help them directly.
 
 ---
 
-## Pemecahan masalah
+## Troubleshooting
 
-| Gejala | Sebab | Perbaikan |
+| Symptom | Cause | Fix |
 |---|---|---|
-| Device masuk tanpa tag | Auth key dibuat tanpa tag | Buat auth key baru, pilih **Tags** |
-| A bisa lihat B | ACL salah | Cek tidak ada `src: ["*"]` |
-| `tailscale up` minta approve | **Pre-approved** tidak dicentang | Buat kunci baru dengan Pre-approved ON |
-| Kunci tidak jalan | Kedaluwarsa / sudah dihapus | Buat kunci baru |
-| Device tidak muncul | `tailscale up` gagal | Cek: `sudo tailscale status` |
-| Tidak bisa SSH ke device | ACL SSH belum benar | Pastikan blok `ssh` ada seperti di atas |
+| Device joins without a tag | Auth key created without a tag | Create a new auth key, select **Tags** |
+| A can see B | ACL is wrong | Check there is no `src: ["*"]` |
+| `tailscale up` asks for approval | **Pre-approved** not checked | Create a new key with Pre-approved ON |
+| Key doesn't work | Expired / already deleted | Create a new key |
+| Device doesn't appear | `tailscale up` failed | Check: `sudo tailscale status` |
+| Can't SSH into the device | SSH ACL not yet correct | Make sure the `ssh` block is present as above |
 
 ---
 
-## Hal yang perlu diingat
+## Things to remember
 
 ```
-1. Auth key & tag HANYA dibuat dari admin console, bukan CLI.
-2. Selalu pakai tag — tanpa tag, device bisa saling lihat.
-3. ACL Anda SUDAH BENAR: hanya admin -> device, tidak ada antar-device.
-4. Kunci = akses ke tailnet Anda. Beri masa berlaku pendek (90 hari).
-5. Installer tidak pernah memaksa — otomatis hanya kalau kunci diberikan.
-6. Cek dashboard berkala, hapus device yang tidak dikenal.
+1. Auth keys & tags are ONLY created from the admin console, not the CLI.
+2. Always use a tag — without a tag, devices can see each other.
+3. Your ACL is ALREADY CORRECT: only admin -> devices, nothing between devices.
+4. A key = access to your tailnet. Give it a short expiry (90 days).
+5. The installer never forces anything — automatic only if a key is provided.
+6. Check the dashboard regularly, remove unknown devices.
 ```
 
 ---
 
-## PENTING — Kalau auth key ditempel di repo
+## IMPORTANT — If an auth key is pasted into the repo
 
-Kalau pemilik repo menempelkan auth key langsung di `installer.env`
-supaya klien tidak perlu mengisi apa pun:
+If the repo owner pastes an auth key directly into `installer.env`
+so clients don't have to fill in anything:
 
-### Pengaman yang sudah otomatis di installer
+### Safeguards already built into the installer
 
 ```
-1. Nama device otomatis: hermes-<6 karakter acak>
-   → mudah dikenali & dikelompokkan di dashboard
+1. Automatic device name: hermes-<6 random characters>
+   → easy to recognize & group in the dashboard
 
-2. Device TIDAK bisa jadi exit node / subnet router
+2. The device CANNOT become an exit node / subnet router
    (--advertise-exit-node=false)
-   → mempersempit kemungkinan penyalahgunaan
+   → narrows the possibility of misuse
 
-3. Klien diberi tahu secara jujur bahwa device-nya terhubung
-   dan diberi cara memutus sendiri:
+3. Clients are honestly told that their device is connected
+   and given a way to disconnect on their own:
        sudo tailscale down && sudo tailscale logout
 ```
 
-### Yang WAJIB diperhatikan pemilik repo
+### What the repo owner MUST keep in mind
 
 ```
-⚠️ Auth key reusable di repo publik = siapa pun bisa memakainya.
+⚠️ A reusable auth key in a public repo = anyone can use it.
 
-Mitigasi yang disarankan:
-  • Expiration PENDEK (7–30 hari) → key mati sendiri
-    → Perpanjang dengan generate key baru secara berkala
-  • Pantau halaman Machines: device asing = hapus
+Recommended mitigations:
+  • SHORT expiration (7–30 days) → the key dies on its own
+    → Renew by generating a new key periodically
+  • Watch the Machines page: foreign device = remove it
     (https://login.tailscale.com/admin/machines)
-  • Cabut key kapan saja: Settings > Keys > Revoke
-  • JANGAN pakai key yang sama untuk hal lain
+  • Revoke the key at any time: Settings > Keys > Revoke
+  • Do NOT use the same key for anything else
 ```
 
-### Batas tanggung jawab (jujur)
+### Limits of responsibility (honestly)
 
 ```
-Yang BISA dilakukan pemilik key:
-  • Masuk ke device klien via SSH
-  • Melihat device klien di dashboard
+What the key owner CAN do:
+  • Access the client's device via SSH
+  • See the client's device in the dashboard
 
-Yang TIDAK terjadi otomatis:
-  • Data klien tidak terkirim ke pemilik repo
-  • File klien tidak tersalin ke mana-mana
-  • Aplikasi klien tidak bisa diakses tanpa kredensialnya sendiri
+What does NOT happen automatically:
+  • Client data is not sent to the repo owner
+  • Client files are not copied anywhere
+  • Client applications cannot be accessed without their own credentials
 ```
 
-Karena itu, installer **memberi tahu klien secara terbuka** dan
-menyediakan cara memutus. Ini penting baik untuk etika maupun
-agar klien tidak merasa dirugikan.
+Therefore the installer **informs clients openly** and
+provides a way to disconnect. This matters both ethically and
+so clients don't feel disadvantaged.

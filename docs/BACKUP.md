@@ -1,103 +1,103 @@
-# BACKUP LENGKAP & PEMULIHAN
+# FULL BACKUP & RESTORE
 
-> Terakhir diperbarui: 4 Okt 2026 · 09:15 WIB
+> Last updated: 4 Oct 2026 · 09:15 WIB
 
-Robot Anda otomatis mencadangkan **seluruh dirinya** dua kali sehari.
-Panduan ini menjelaskan apa yang disalin, di mana disimpan, dan cara
-memulihkannya kalau komputer rusak.
-
----
-
-## 1. APA YANG DICADANGKAN
-
-Semuanya. Bukan cuma pengaturan:
-
-```
-OTAK ROBOT
-  • skills/          kemampuannya
-  • cron/            tugas terjadwalnya
-  • templates/       contoh siap pakai
-  • knowledge/       bahan pengetahuannya
-
-WATAK ROBOT
-  • SOUL.md          kepribadiannya
-  • profiles/        semua profil (kalau ada beberapa)
-  • config.yaml      seluruh pengaturannya
-  • .env             kunci aksesnya (rahasia!)
-
-ALAT KERJA
-  • scripts/         skrip bantuannya
-  • hooks/           pemicu otomatisnya
-  • remote-view/     alat bantu layar jarak jauh
-
-INGATANNYA
-  • sessions/        riwayat percakapan
-  • state.db         basis data ingatan
-  • session_search.db indeks pencarian
-```
-
-**Kenapa lengkap?** Kalau cuma dicadangkan pengaturannya, robotnya harus
-dilatih dari nol. Dengan cara ini, robot baru langsung jadi seperti sedia
-kala — sama seperti memulihkan seluruh isi ponsel dari cadangan.
+Your robot automatically backs up **its entire self** twice a day.
+This guide explains what is copied, where it is stored, and how
+to restore it if the computer breaks.
 
 ---
 
-## 2. DI MANA DISIMPAN
+## 1. WHAT IS BACKED UP
+
+Everything. Not just the settings:
 
 ```
-~/hermes-backup/                        ← di komputer Anda
+ROBOT'S BRAIN
+  • skills/          its capabilities
+  • cron/            its scheduled tasks
+  • templates/       ready-to-use examples
+  • knowledge/       its knowledge material
+
+ROBOT'S CHARACTER
+  • SOUL.md          its personality
+  • profiles/        all profiles (if there are several)
+  • config.yaml      all of its configuration
+  • .env             its access keys (secret!)
+
+WORK TOOLS
+  • scripts/         its helper scripts
+  • hooks/           its automatic triggers
+  • remote-view/     the remote-screen helper tool
+
+ITS MEMORY
+  • sessions/        conversation history
+  • state.db         the memory database
+  • session_search.db the search index
+```
+
+**Why complete?** If only the settings were backed up, the robot would have
+to be trained from scratch. This way, a new robot immediately becomes like
+it was before — just like restoring a phone's entire contents from a backup.
+
+---
+
+## 2. WHERE IT IS STORED
+
+```
+~/hermes-backup/                        ← on your computer
    hermes-snapshot-20261004_0900.tar.zst
    hermes-snapshot-20261004_0900.CATATAN.txt
 
-Google Drive (kalau disiapkan)
-   gdrive:hermes-backup/                ← di awan, aman kalau komputer rusak
+Google Drive (if set up)
+   gdrive:hermes-backup/                ← in the cloud, safe if the computer breaks
 ```
 
-⚠️ **Cadangan sengaja disimpan DI LUAR folder `~/.hermes`.**
-Kalau disimpan di dalam, cadangan akan ikut hilang saat `.hermes` rusak.
-Itu sama saja tidak punya cadangan.
+⚠️ **The backup is deliberately stored OUTSIDE the `~/.hermes` folder.**
+If it were stored inside, the backup would also be lost when `.hermes` breaks.
+That would be the same as having no backup.
 
 ---
 
-## 3. JADWAL
+## 3. SCHEDULE
 
 ```
-02:00 UTC = 09:00 WIB     cadangan pagi
-14:00 UTC = 21:00 WIB     cadangan malam
-14:00 UTC = 21:00 WIB     perawatan harian (bersih-bersih)
+02:00 UTC = 09:00 WIB     morning backup
+14:00 UTC = 21:00 WIB     evening backup
+14:00 UTC = 21:00 WIB     daily maintenance (cleanup)
 
-Cadangan > 30 hari dibuang otomatis (hemat ruang)
+Backups older than 30 days are deleted automatically (to save space)
 ```
 
 ---
 
-## 4. CARA MEMULIHKAN (ALA TWRP)
+## 4. HOW TO RESTORE (TWRP-STYLE)
 
-Simpan dulu berkas `full-backup.sh` di luar folder `.hermes`,
-misalnya di folder rumah. Lalu:
+First save the `full-backup.sh` file outside the `.hermes` folder,
+for example in the home folder. Then:
 
 ```bash
 cd ~
 bash full-backup.sh --pulihkan ~/hermes-backup/hermes-snapshot-XXX.tar.zst
 ```
 
-Atau langsung dengan tar:
+Or directly with tar:
 
 ```bash
 cd ~
 tar --zstd -xf ~/hermes-backup/hermes-snapshot-XXX.tar.zst
 ```
 
-**Apa yang terjadi:**
+**What happens:**
 
 ```
-1. Sistem lama Anda dipindah ke  ~/.hermes-lama-<tanggal>
-   (tidak dihapus — kalau pemulihan gagal, masih bisa kembali)
-2. Isi cadangan dikembalikan ke   ~/.hermes
-3. Anda diminta menjalankan:      hermes gateway restart
+1. Your old system is moved to  ~/.hermes-lama-<tanggal>
+   (not deleted — if the restore fails, you can still go back)
+2. The backup contents are restored to   ~/.hermes
+3. You are asked to run:      hermes gateway restart
 ```
 
-**Kalau ada yang salah:** kembalikan sistem lama —
+**If something goes wrong:** restore the old system —
 
 ```bash
 rm -rf ~/.hermes
@@ -107,150 +107,150 @@ hermes gateway restart
 
 ---
 
-## 5. MENGHUBUNGKAN KE GOOGLE DRIVE
+## 5. CONNECTING TO GOOGLE DRIVE
 
-Cadangan di komputer saja masih berisiko: kalau komputernya rusak atau
-dicuri, cadangannya ikut hilang. Menghubungkan ke Google Drive
-menyelesaikannya.
+A backup only on the computer is still risky: if the computer breaks or is
+stolen, the backup is lost too. Connecting to Google Drive
+solves this.
 
-### Langkah 1 — Buat aplikasi di Google Cloud
+### Step 1 — Create an app in Google Cloud
 
 ```
-1. Buka  https://console.cloud.google.com/
-2. Buat proyek baru (misalnya: hermes-backup)
-3. Buka   https://console.cloud.google.com/apis/library/drive.googleapis.com
-   → klik ENABLE
-4. Buka   https://console.cloud.google.com/apis/credentials
+1. Open  https://console.cloud.google.com/
+2. Create a new project (for example: hermes-backup)
+3. Open   https://console.cloud.google.com/apis/library/drive.googleapis.com
+   → click ENABLE
+4. Open   https://console.cloud.google.com/apis/credentials
    → Create Credentials → OAuth client ID
    → Application type: Desktop app
    → Create
-5. Unduh JSON-nya → pindahkan jadi:  ~/.config/rclone/gdrive.json
+5. Download the JSON → move it to:  ~/.config/rclone/gdrive.json
 ```
 
-### Langkah 2 — Hubungkan
+### Step 2 — Connect
 
 ```bash
 rclone config
 ```
 
-Ikuti:
+Follow:
 
 ```
-n                          → remote baru
-name: gdrive               → namanya harus "gdrive" (huruf kecil)
-Storage: drive             → pilih Google Drive
-client_id: (kosongkan)
-client_secret: (kosongkan)
+n                          → new remote
+name: gdrive               → its name must be "gdrive" (lowercase)
+Storage: drive             → choose Google Drive
+client_id: (leave empty)
+client_secret: (leave empty)
 scope: 1                   → Full access
-root_folder_id: (kosong)
-service_account_file: (kosong)
+root_folder_id: (leave empty)
+service_account_file: (leave empty)
 Edit advanced config: n
-Use web browser: n         → karena ini server
-   → akan muncul tautan; buka di HP/komputer Anda
-   → izinkan → salin kode → tempel di terminal
+Use web browser: n         → because this is a server
+   → a link will appear; open it on your phone/computer
+   → allow → copy the code → paste it in the terminal
 Configure as Shared Drive: n
-y                          → simpan
-q                          → keluar
+y                          → save
+q                          → quit
 ```
 
-### Langkah 3 — Uji
+### Step 3 — Test
 
 ```bash
-rclone listremotes                      # harus muncul: gdrive:
+rclone listremotes                      # should show: gdrive:
 bash ~/.hermes/scripts/full-backup.sh
-rclone ls gdrive:hermes-backup/         # harus muncul arsipnya
+rclone ls gdrive:hermes-backup/         # should show the archives
 ```
 
 ---
 
-## 6. MENGHUBUNGKAN KE GITHUB
+## 6. CONNECTING TO GITHUB
 
-Cara ini cadangannya **berversi** — bisa kembali ke titik mana pun.
+With this method the backup is **versioned** — you can go back to any point.
 
-### Langkah 1 — Buat token GitHub
+### Step 1 — Create a GitHub token
 
 ```
-1. Buka  https://github.com/settings/tokens?type=beta
+1. Open  https://github.com/settings/tokens?type=beta
 2. Generate new token (fine-grained)
 3. Name: hermes-backup
-4. Expiration: 90 days (atau No expiration kalau memang mau)
+4. Expiration: 90 days (or No expiration if you really want)
 5. Repository access: Only select repositories
-   → pilih repo cadangan Anda (harus dibuat dulu)
+   → select your backup repo (must be created first)
 6. Permissions → Repository permissions:
        Contents .............. Read and write
        Administration ......... Read and write
-7. Generate token → SALIN (hanya muncul sekali)
+7. Generate token → COPY (it only appears once)
 ```
 
-### Langkah 2 — Simpan aman & hubungkan
+### Step 2 — Store safely & connect
 
 ```bash
 mkdir -p ~/.hermes/kredensial
 printf '%s' '<token Anda>' > ~/.hermes/kredensial/github-backup.token
 chmod 600 ~/.hermes/kredensial/github-backup.token
 
-# setel git supaya tidak minta sandi lagi
+# configure git so it doesn't ask for a password again
 git config --global credential.helper store
 ```
 
-> **Kalau Anda memakai Perplexity/AI untuk memandu:**
-> minta AI itu melihat halaman GitHub tersebut lebih dulu
-> (`https://github.com/settings/tokens?type=beta`) supaya langkahnya sesuai
-> tampilan terkini — halaman GitHub sering berubah. Pola dasar yang harus
-> dipahami: pilih **repository** dulu → baru **permissions** → baru generate.
+> **If you use Perplexity/AI to guide you:**
+> ask that AI to look at that GitHub page first
+> (`https://github.com/settings/tokens?type=beta`) so the steps match
+> the current interface — the GitHub page changes often. The basic pattern to
+> understand: choose the **repository** first → then **permissions** → then generate.
 
 ---
 
-## 7. PERINTAHKAN KE AI ANDA
+## 7. INSTRUCT YOUR AI
 
-Kalau Anda memakai AI untuk memandu, tempelkan kalimat ini:
-
-```
-Cadangkan sistem Hermes saya ke Google Drive dan/atau GitHub.
-
-Sebelum memandu, LIHAT DULU halaman-halaman ini di internet supaya
-langkahnya akurat (halaman sering berubah):
-  • https://rclone.org/drive/                    (cara rclone + Drive)
-  • https://github.com/settings/tokens?type=beta (cara token GitHub)
-  • https://console.cloud.google.com/apis/credentials (cara OAuth)
-
-Lalu pandu saya langkah demi langkah. Jangan menebak strukturnya.
-Sebutkan selalu jam WIB saat memberi waktu/jadwal.
-```
-
----
-
-## 8. YANG PERLU ANDA TAHU
+If you use an AI to guide you, paste this text:
 
 ```
-✅ Cadangan lengkap       → robot bisa hidup kembali utuh
-✅ Disimpan di luar       → selamat kalau .hermes rusak
-✅ Ke Drive               → selamat kalau komputer hilang
-✅ Ke GitHub              → bisa kembali ke titik mana pun
+Back up my Hermes system to Google Drive and/or GitHub.
 
-⚠️ .env berisi kunci rahasia → simpan remote Drive sebagai PRIVATE
-⚠️ Cadangan > 30 hari dihapus otomatis → kalau perlu lama, ubah jadwalnya
+Before guiding, LOOK FIRST at these pages on the internet so the
+steps are accurate (pages change often):
+  • https://rclone.org/drive/                    (how to use rclone + Drive)
+  • https://github.com/settings/tokens?type=beta (how to create a GitHub token)
+  • https://console.cloud.google.com/apis/credentials (how to do OAuth)
+
+Then guide me step by step. Don't guess the structure.
+Always state the time in WIB when giving times/schedules.
 ```
 
 ---
 
-## 9. JIKA BACKUP GAGAL
+## 8. WHAT YOU NEED TO KNOW
+
+```
+✅ Complete backup       → the robot can come back fully intact
+✅ Stored outside        → safe if .hermes breaks
+✅ To Drive              → safe if the computer is lost
+✅ To GitHub             → can go back to any point
+
+⚠️ .env contains secret keys → keep the Drive remote as PRIVATE
+⚠️ Backups older than 30 days are deleted automatically → if you need to keep them longer, change the schedule
+```
+
+---
+
+## 9. IF BACKUP FAILS
 
 ```bash
-# lihat catatan
+# view the log
 tail -50 ~/.hermes/logs/full-backup.log
 
-# uji manual
+# test manually
 bash ~/.hermes/scripts/full-backup.sh
 
-# cek ruang disk
+# check disk space
 df -h ~
 ```
 
-Masalah tersering:
+Most common problems:
 
 ```
-"zstd tidak tersedia"   → sudo apt-get install -y zstd
-"rclone tidak ada"      → sudo apt-get install -y rclone
-"Drive belum disiapkan" → ulangi bagian 5 di atas
+"zstd not available"   → sudo apt-get install -y zstd
+"rclone not found"     → sudo apt-get install -y rclone
+"Drive not set up"     → repeat section 5 above
 ```
