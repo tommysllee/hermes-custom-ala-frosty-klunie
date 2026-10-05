@@ -44,6 +44,46 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whats
 
 ---
 
+## ALREADY INSTALLED HERMES? — pull the prompt, let it configure itself
+
+Use this **if** you have already done these two things:
+1. Installed Hermes with the official Nous Research command
+2. Selected the provider and model (`hermes model`)
+
+Then you do **not** need this installer. Instead, pull the prompt and let Hermes
+finish the job itself — no downloading files, no clicking, works fine on a
+plain-text Ubuntu server.
+
+### 🐧 Ubuntu / Debian / macOS — one line, nothing to download
+
+```bash
+hermes chat -q "$(curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/docs/PROMPT_CLIENT_BOOTSTRAP.txt)"
+```
+
+Hermes downloads the prompt, reads it, and configures the whole machine by
+itself: base tools, Docker, search, browser, local voice, auto-start,
+auto-update, SSH, remote view, Tailscale, then guides you through the human
+steps (account login, WhatsApp QR, Google, backup).
+
+### 🪟 Windows (PowerShell)
+
+```powershell
+hermes chat -q "$(irm https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/docs/PROMPT_CLIENT_BOOTSTRAP.txt)"
+```
+
+### Prefer to paste it yourself?
+
+Open the prompt file, copy everything, then paste it into Hermes:
+
+- **Bare prompt (paste this):** [docs/PROMPT_CLIENT_BOOTSTRAP.txt](docs/PROMPT_CLIENT_BOOTSTRAP.txt)
+- **Full version with explanation:** [docs/PROMPT_CLIENT_BOOTSTRAP_FULL.md](docs/PROMPT_CLIENT_BOOTSTRAP_FULL.md)
+
+> **Which one do I need?** The one-command installer above (`bootstrap.sh`) does
+> everything **including** installing Hermes. The prompt is for when Hermes is
+> **already** installed and you only need the machine configured.
+
+---
+
 ## CHOOSE FIRST: What is your system?
 
 | Your system | One command | Guide |
@@ -145,6 +185,8 @@ Follow the guide: [docs/BACKUP.md](docs/BACKUP.md)
 - **MacBook guide** — [docs/MAC.md](docs/MAC.md)
 - **Backup & Google Drive** — [docs/BACKUP.md](docs/BACKUP.md)
 - **Common problems** — [docs/PEMECAHAN.md](docs/PEMECAHAN.md)
+- **Prompt: configure a machine that already has Hermes** — [docs/PROMPT_CLIENT_BOOTSTRAP.txt](docs/PROMPT_CLIENT_BOOTSTRAP.txt) · [full version](docs/PROMPT_CLIENT_BOOTSTRAP_FULL.md)
+- **Prompt: build/edit this repo** — [docs/PROMPT_FOR_AI_AGENT.md](docs/PROMPT_FOR_AI_AGENT.md)
 
 ---
 
@@ -191,6 +233,10 @@ sudo systemctl status hermes-gateway   # check robot status
 ## Security
 
 - No API key or password is stored in this repo
+- The only key in this repo is the Tailscale auth key inside
+  `docs/PROMPT_CLIENT_BOOTSTRAP*.txt|md` (needed so client machines join the
+  network automatically). **Revoke and replace that key once your machines have
+  joined.**
 - The remote web view password is generated **randomly** on your computer, not shared
 - Remote web view can **only** be accessed via Tailscale
 - Remote web view does **not** start on its own — only when you turn it on
@@ -198,4 +244,4 @@ sudo systemctl status hermes-gateway   # check robot status
 
 ---
 
-**Last updated: Saturday, 03 Oct 2026 · 16:55 WIB**
+**Last updated: Monday, 05 Oct 2026 · 17:30 WIB**

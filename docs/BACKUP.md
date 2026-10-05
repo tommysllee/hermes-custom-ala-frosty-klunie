@@ -186,7 +186,7 @@ With this method the backup is **versioned** — you can go back to any point.
 
 ```bash
 mkdir -p ~/.hermes/kredensial
-printf '%s' '<token Anda>' > ~/.hermes/kredensial/github-backup.token
+printf '%s' '<your-token>' > ~/.hermes/kredensial/github-backup.token
 chmod 600 ~/.hermes/kredensial/github-backup.token
 
 # configure git so it doesn't ask for a password again

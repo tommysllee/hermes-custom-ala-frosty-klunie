@@ -172,7 +172,7 @@ http://<IP-Tailscale-Windows>:6080/vnc.html
 | Task Scheduler error `0x1` | Wrong user/path | Check Ubuntu username: `wsl -d Ubuntu whoami` |
 | noVNC can't be opened | Port not bridged yet | Run `jembatan-port.ps1` |
 | Tailscale doesn't run in WSL | Normal | Install Tailscale on **Windows**, not WSL |
-| WSL slow / eats memory | Default memory limit | Create `C:\Users\<Anda>\.wslconfig` → see below |
+| WSL slow / eats memory | Default memory limit | Create `C:\Users\<YourName>\.wslconfig` → see below |
 
 ### Limit WSL memory (if the computer becomes slow)
 
