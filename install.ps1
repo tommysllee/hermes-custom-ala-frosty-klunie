@@ -178,6 +178,22 @@ Tulis-Judul "TAHAP 3 dari 5 - MEMASANG KOMPONEN (di dalam Ubuntu)"
 Tulis-Info "menyiapkan alat dasar di Ubuntu..."
 wsl -d $DISTRO -u root -e bash -c "apt-get update -qq && apt-get install -y -qq git curl rsync" 2>$null
 
+# ===========================================================================
+# CEK DULU: apakah Hermes sudah ada di dalam Ubuntu?
+# Kalau sudah, cukup pakai yang ada - jangan pasang ulang.
+# ===========================================================================
+Tulis-Info "memeriksa apakah Hermes sudah terpasang di Ubuntu..."
+$cekHermes = (wsl -d $DISTRO -u $userUbuntu -e bash -lc "command -v hermes || ls ~/.local/bin/hermes 2>/dev/null || ls ~/.hermes/bin/hermes 2>/dev/null || echo TIDAKADA" 2>$null)
+if ($cekHermes -and $cekHermes.Trim() -ne "TIDAKADA" -and $cekHermes -notmatch "TIDAKADA") {
+    Tulis-Ok "Hermes SUDAH ADA di Ubuntu: $($cekHermes.Trim())"
+    Tulis-Info "   tidak dipasang ulang - langsung lanjut ke tahap berikutnya"
+    $HermesSudahAda = $true
+} else {
+    Tulis-Info "Hermes belum ada - akan dipasang"
+    $HermesSudahAda = $false
+}
+Write-Host ""
+
 # Salin repo ke dalam Ubuntu (kalau dijalankan dari Windows)
 $lokasiSkrip = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoDiWsl = "/tmp/hermes-custom"

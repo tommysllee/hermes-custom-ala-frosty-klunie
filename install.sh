@@ -206,15 +206,65 @@ fi
 docker compose version >/dev/null 2>&1 || jalan "$SUDO apt-get install -y -qq docker-compose-plugin"
 ok "Docker + compose siap"
 
-# Hermes
-if command -v hermes >/dev/null 2>&1; then
-  ok "Hermes sudah ada"
+# ---------------------------------------------------------------------------
+# DETEKSI HERMES YANG SUDAH ADA
+#
+# Kalau Hermes sudah pernah dipasang di komputer ini, JANGAN pasang ulang.
+# Cukup CARI di mana dia berada, pakai yang itu, lalu lanjutkan tahap
+# berikutnya. Ini mencegah: pemasangan ganda, konfigurasi tertimpa,
+# dan pemborosan unduhan besar.
+# ---------------------------------------------------------------------------
+cari_hermes() {
+  # 1. Sudah ada di PATH?
+  if command -v hermes >/dev/null 2>&1; then
+    command -v hermes; return 0
+  fi
+  # 2. Lokasi umum pemasangan (urut dari paling sering)
+  for c in \
+    "$HOME/.local/bin/hermes" \
+    "$HOME/.hermes/bin/hermes" \
+    "/usr/local/bin/hermes" \
+    "/usr/bin/hermes" \
+    "$HOME/bin/hermes" \
+    "$HOME/.cargo/bin/hermes" \
+    "/opt/hermes/bin/hermes"
+  do
+    [ -x "$c" ] && { echo "$c"; return 0; }
+  done
+  # 3. Cari lebih luas (maks 4 tingkat, abaikan folder sampah)
+  local ketemu
+  ketemu=$(find "$HOME" /usr/local /opt -maxdepth 4 -type f -name hermes \
+    -perm -u+x 2>/dev/null | grep -v "/\.cache/\|/node_modules/" | head -1)
+  [ -n "$ketemu" ] && { echo "$ketemu"; return 0; }
+  return 1
+}
+
+HERMES_BIN="$(cari_hermes)"
+if [ -n "$HERMES_BIN" ]; then
+  info "Hermes SUDAH ADA di komputer ini:"
+  info "   $HERMES_BIN"
+  # Pastikan bisa dipanggil sebagai 'hermes'
+  if ! command -v hermes >/dev/null 2>&1; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$HERMES_BIN" "$HOME/.local/bin/hermes" 2>/dev/null || true
+    export PATH="$HOME/.local/bin:$PATH"
+    info "   dipasang tautan agar perintah 'hermes' bisa dipakai"
+  fi
+  # Tampilkan versinya sebagai bukti hidup
+  VERSI_HERMES=$("$HERMES_BIN" --version 2>/dev/null | head -1)
+  [ -n "$VERSI_HERMES" ] && ok "Hermes siap dipakai ($VERSI_HERMES)" \
+                         || ok "Hermes siap dipakai"
+  info "   tidak dipasang ulang — langsung lanjut ke tahap berikutnya"
 else
-  info "memasang Hermes (5-10 menit)..."
+  info "Hermes belum ada di komputer ini — memasang (5-10 menit)..."
   jalan "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
   export PATH="$HOME/.local/bin:$PATH"
-  if command -v hermes >/dev/null 2>&1; then ok "Hermes dipasang"
-  else gagal "Hermes gagal dipasang — jalankan manual lalu ulangi"; exit 1; fi
+  HERMES_BIN="$(cari_hermes)"
+  if [ -n "$HERMES_BIN" ]; then
+    ok "Hermes dipasang"
+  else
+    gagal "Hermes gagal dipasang — jalankan manual lalu ulangi"; exit 1
+  fi
 fi
 
 # ---------------------------------------------------------------------------

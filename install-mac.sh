@@ -183,13 +183,44 @@ jalan "brew install python3 ffmpeg imagemagick git rsync"
 ok "alat pendukung siap"
 
 # Hermes
-if command -v hermes >/dev/null 2>&1; then
-  ok "Hermes sudah ada"
+# ---------------------------------------------------------------------------
+# DETEKSI HERMES YANG SUDAH ADA — kalau sudah dipasang, cukup pakai.
+# ---------------------------------------------------------------------------
+cari_hermes() {
+  if command -v hermes >/dev/null 2>&1; then command -v hermes; return 0; fi
+  for c in "$HOME/.local/bin/hermes" "$HOME/.hermes/bin/hermes" \
+           "/usr/local/bin/hermes" "/opt/homebrew/bin/hermes" \
+           "$HOME/bin/hermes"; do
+    [ -x "$c" ] && { echo "$c"; return 0; }
+  done
+  local ketemu
+  ketemu=$(find "$HOME" /usr/local /opt/homebrew -maxdepth 4 -type f \
+    -name hermes -perm -u+x 2>/dev/null \
+    | grep -v "/\.cache/\|/node_modules/" | head -1)
+  [ -n "$ketemu" ] && { echo "$ketemu"; return 0; }
+  return 1
+}
+
+HERMES_BIN="$(cari_hermes)"
+if [ -n "$HERMES_BIN" ]; then
+  info "Hermes SUDAH ADA di komputer ini:"
+  info "   $HERMES_BIN"
+  if ! command -v hermes >/dev/null 2>&1; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$HERMES_BIN" "$HOME/.local/bin/hermes" 2>/dev/null || true
+    export PATH="$HOME/.local/bin:$PATH"
+    info "   dipasang tautan agar perintah 'hermes' bisa dipakai"
+  fi
+  VERSI_HERMES=$("$HERMES_BIN" --version 2>/dev/null | head -1)
+  [ -n "$VERSI_HERMES" ] && ok "Hermes siap dipakai ($VERSI_HERMES)" \
+                         || ok "Hermes siap dipakai"
+  info "   tidak dipasang ulang — langsung lanjut ke tahap berikutnya"
 else
-  info "memasang Hermes..."
+  info "Hermes belum ada — memasang..."
   jalan "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
   export PATH="$HOME/.local/bin:$PATH"
-  command -v hermes >/dev/null 2>&1 && ok "Hermes dipasang" || { gagal "Hermes gagal"; exit 1; }
+  HERMES_BIN="$(cari_hermes)"
+  [ -n "$HERMES_BIN" ] && ok "Hermes dipasang" || { gagal "Hermes gagal"; exit 1; }
 fi
 
 # Tailscale
