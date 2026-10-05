@@ -270,7 +270,7 @@ find_hermes() {
   return 1
 }
 
-HERMES_BIN="$(cari_hermes)"
+HERMES_BIN="$(find_hermes)"
 if [ -n "$HERMES_BIN" ]; then
   info "Hermes ALREADY PRESENT on this machine:"
   info "   $HERMES_BIN"
