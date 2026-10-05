@@ -185,7 +185,7 @@ jalan "$SUDO apt-get install -y -qq \
   iproute2 iptables iputils-ping dnsutils net-tools \
   wireless-tools iw rfkill wpasupplicant netplan.io \
   usbutils pciutils lsof htop procps \
-  at-spi2-core dbus-x11 fonts-liberation" \
+  at-spi2-core dbus-x11 fonts-liberation epiphany-browser" \
   || info "sebagian alat dasar tidak tersedia — dilanjutkan"
 
 HILANG=""
@@ -492,6 +492,32 @@ case "${1:-status}" in
     printf '%s\n' "$P" | x11vnc -storepasswd "$P" "$DIR/.vncpass" >/dev/null 2>&1
     x11vnc -display ":$DPY" -rfbauth "$DIR/.vncpass" -rfbport "$PVNC" -localhost -forever -shared >/dev/null 2>&1 & sleep 2
     websockify --web /usr/share/novnc "$IP_TS:$PWEB" "localhost:$PVNC" >/dev/null 2>&1 & sleep 2
+
+    # Nyalakan browser DI DALAM layar itu, supaya yang melihat tidak
+    # menemukan layar kosong. Pilih browser yang tersedia.
+    # PENTING: di Ubuntu 24.04, paket 'firefox' dan 'chromium' hanya
+    # pembungkus SNAP dan TIDAK jalan tanpa snapd. Yang benar-benar
+    # mandiri: Camoufox (sudah dipasang installer) atau epiphany-browser.
+    PASANG_BROWSER=""
+    [ -x "$HOME/.cache/camoufox/camoufox-bin" ] \
+      && PASANG_BROWSER="$HOME/.cache/camoufox/camoufox-bin"
+    for b in camoufox epiphany google-chrome; do
+      [ -n "$PASANG_BROWSER" ] && break
+      command -v "$b" >/dev/null 2>&1 && PASANG_BROWSER="$b"
+    done
+    if [ -z "$PASANG_BROWSER" ]; then
+      echo "  → memasang browser mandiri (epiphany)..."
+      sudo -n apt-get install -y -qq epiphany-browser >/dev/null 2>&1 || true
+      command -v epiphany >/dev/null 2>&1 && PASANG_BROWSER="epiphany"
+    fi
+    if [ -n "$PASANG_BROWSER" ]; then
+      DISPLAY=":$DPY" nohup "$PASANG_BROWSER" about:blank >/dev/null 2>&1 &
+      sleep 3
+      echo "  ✓ Browser sudah terbuka di dalam layar"
+    else
+      echo "  → browser tidak tersedia — pasang nanti: sudo apt install epiphany-browser"
+    fi
+
     echo "  ✓ Remote web view AKTIF"
     echo "    Buka : http://$IP_TS:$PWEB/vnc.html"
     echo "    Sandi: $0 password" ;;
@@ -505,7 +531,37 @@ case "${1:-status}" in
       && { echo "  Status: AKTIF"; echo "  Buka  : http://$IP_TS:$PWEB/vnc.html"; } \
       || { echo "  Status: MATI"; echo "  Nyalakan: $0 start"; } ;;
   password) echo "  Sandi: $(ambil_pass)" ;;
-  *) echo "Pakai: $0 start | stop | status | password" ;;
+  buka|gemini|whatsapp)
+    # Tentukan alamat sesuai perintah
+    case "$1" in
+      buka)     ALAMAT="${2:-about:blank}" ;;
+      gemini)   ALAMAT="https://gemini.google.com" ;;
+      whatsapp) ALAMAT="http://localhost:8081/manager" ;;
+    esac
+    # Cari browser yang BENAR-BENAR bisa jalan (firefox/chromium di
+    # Ubuntu 24.04 hanya pembungkus snap dan tidak jalan tanpa snapd).
+    JALAN=""
+    [ -x "$HOME/.cache/camoufox/camoufox-bin" ] \
+      && JALAN="$HOME/.cache/camoufox/camoufox-bin"
+    if [ -z "$JALAN" ]; then
+      for b in camoufox epiphany google-chrome; do
+        command -v "$b" >/dev/null 2>&1 && { JALAN="$(command -v "$b")"; break; }
+      done
+    fi
+    if [ -z "$JALAN" ]; then
+      echo "  → memasang browser (epiphany)..."
+      sudo -n apt-get install -y -qq epiphany-browser >/dev/null 2>&1 || true
+      command -v epiphany >/dev/null 2>&1 && JALAN="$(command -v epiphany)"
+    fi
+    if [ -n "$JALAN" ]; then
+      DISPLAY=":$DPY" nohup "$JALAN" "$ALAMAT" >/dev/null 2>&1 &
+      sleep 2
+      echo "  ✓ Terbuka di dalam layar: $ALAMAT"
+    else
+      echo "  ✗ Browser tidak tersedia."
+      echo "    Pasang dulu:  sudo apt install epiphany-browser"
+    fi ;;
+  *) echo "Pakai: $0 start | stop | status | password | buka <alamat> | gemini | whatsapp" ;;
 esac
 RVS
   chmod +x "$HERMES_HOME/remote-view/remote-view.sh"
@@ -808,11 +864,20 @@ cat <<'WA'
      diri sendiri. Kontak lain tidak diganggu. Paling aman untuk awalan.
 
      Langkah:
-       a. Nyalakan remote web view:
+       a. Nyalakan remote web view + panel WhatsApp:
             ~/.hermes/remote-view/remote-view.sh start
+            ~/.hermes/remote-view/remote-view.sh whatsapp
+
+          Perintah pertama menampilkan ALAMAT dan SANDI.
+          Perintah kedua membuka panel WhatsApp di dalam layar.
+
        b. Buka di HP/laptop:
-            http://<alamat-tailscale>:8081/manager
-       c. Pindai QR: WhatsApp -> Setelan -> Perangkat Tertaut
+            http://<alamat-yang-muncul>:6080/vnc.html
+          Masukkan sandi, lalu Connect.
+
+       c. Di dalam layar, panel WhatsApp sudah terbuka.
+          Pindai QR: WhatsApp -> Setelan -> Perangkat Tertaut
+
        d. Setelah tersambung, MATIKAN remote web view:
             ~/.hermes/remote-view/remote-view.sh stop
 
@@ -837,7 +902,51 @@ fi
 # --- 5.5 Google Drive untuk BACKUP ---
 if [ "$AUTOBACKUP" = "1" ] && [ "$BACKUP_DRIVE" = "1" ]; then
   echo
-  kotak "6. BACKUP — Drive & GitHub (disarankan)"
+  kotak "6. GAMBAR GRATIS — Gemini di browser (opsional)"
+  cat <<'GEM'
+
+     Robot ini bisa membuat gambar. Cara paling hemat: pakai Gemini
+     di browser (gratis), lewat layar jarak jauh.
+
+     Kenapa lewat layar? Karena Gemini butuh login akun Google Anda,
+     dan robot tidak boleh tahu sandi Anda. Jadi ANDA yang login —
+     sekali saja. Setelah itu sesinya tersimpan, dan robot bisa
+     memakai Gemini untuk membuat gambar kapan pun.
+
+     Langkah:
+
+       a. Nyalakan layar jarak jauh (sekaligus buka Gemini):
+            ~/.hermes/remote-view/remote-view.sh start
+            ~/.hermes/remote-view/remote-view.sh gemini
+
+          Perintah pertama menampilkan ALAMAT dan SANDI. Catat keduanya.
+          Perintah kedua membuka Gemini di dalam layar itu.
+
+       b. Buka di HP/laptop/komputer lain:
+            http://<alamat-yang-muncul>:6080/vnc.html
+
+          Masukkan sandi tadi, lalu Connect.
+
+       c. Di dalam layar, Gemini sudah terbuka. Login dengan akun
+          Google Anda (seperti login di HP biasa).
+
+       d. Kalau sudah masuk, uji sekali:
+            ketik "buatkan gambar kucing lucu"
+
+          Kalau gambarnya muncul, berarti sudah berhasil.
+
+       e. Uji robot membuat gambar:
+            hermes
+            lalu ketik: tolong buatkan gambar kucing lucu
+
+       f. Selesai. MATIKAN layar jarak jauh:
+            ~/.hermes/remote-view/remote-view.sh stop
+
+     Kalau bingung di langkah mana pun, hubungi teknisi Anda —
+     dia bisa masuk ke layar yang sama dan membantu langsung.
+GEM
+
+  kotak "7. BACKUP — Drive & GitHub (disarankan)"
   cat <<'BKD'
 
      Backup robot sudah jalan 2x sehari — TAPI masih tersimpan di
