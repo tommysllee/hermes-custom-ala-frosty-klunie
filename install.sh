@@ -185,26 +185,45 @@ info "updating package list..."
 run "$SUDO apt-get update -qq"
 
 info "installing base packages (3-5 minutes)..."
-# Base packages — grouped clearly. If one is unavailable on a
-# given distro, it does not break the whole installation.
+# Base packages — grouped so that ONE unavailable package cannot cancel
+# the whole apt run (a real failure mode on minimal images).
+# Group 1 — essential (must succeed)
 run "$SUDO apt-get install -y -qq \
-  curl wget git ca-certificates gnupg lsb-release \
+  curl wget git ca-certificates gnupg lsb-release" \
+  || fail "essential packages failed (curl git wget)"
+
+# Group 2 — python & build tooling
+run "$SUDO apt-get install -y -qq \
   python3 python3-pip python3-venv python3-dev \
   rsync unzip jq sqlite3 zstd tar \
-  build-essential pkg-config make \
+  build-essential pkg-config make" \
+  || info "some python/build packages unavailable — continuing"
+
+# Group 3 — display, media, remote access
+run "$SUDO apt-get install -y -qq \
   ffmpeg xvfb x11vnc websockify imagemagick xdotool novnc ufw \
-  rclone cron logrotate \
+  rclone cron logrotate" \
+  || info "some display/media packages unavailable — continuing"
+
+# Group 4 — networking & hardware utilities
+run "$SUDO apt-get install -y -qq \
   iproute2 iptables iputils-ping dnsutils net-tools \
   wireless-tools iw rfkill wpasupplicant netplan.io \
-  usbutils pciutils lsof htop procps \
-  at-spi2-core dbus-x11 fonts-liberation epiphany-browser" \
-  || info "some base packages unavailable — continuing"
+  usbutils pciutils lsof htop procps" \
+  || info "some networking packages unavailable — continuing"
 
-HILANG=""
-for tool in curl git python3 rsync; do
+# Group 5 — accessible browser for the remote screen (optional)
+run "$SUDO apt-get install -y -qq \
+  at-spi2-core dbus-x11 fonts-liberation" \
+  || info "some accessibility packages unavailable — continuing"
+run "$SUDO apt-get install -y -qq epiphany-browser" \
+  || info "browser package unavailable — will retry later if needed"
+
+MISSING=""
+for tool in curl git python3; do
   command -v "$tool" >/dev/null 2>&1 || MISSING="$MISSING $tool"
 done
-[ -n "$MISSING" ] && { fail "failed to install:$MISSING"; exit 1; }
+[ -n "$MISSING" ] && { fail "essential tools missing:$MISSING"; exit 1; }
 ok "base packages ready"
 
 # Docker
@@ -269,9 +288,11 @@ if [ -n "$HERMES_BIN" ]; then
   info "   not reinstalled — continuing to the next stage"
 else
   info "Hermes not found — installing (5-10 minutes)..."
+  # Safety net: the official Hermes installer requires git.
+  command -v git >/dev/null 2>&1 || run "$SUDO apt-get install -y -qq git"
   run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
   export PATH="$HOME/.local/bin:$PATH"
-  HERMES_BIN="$(cari_hermes)"
+  HERMES_BIN="$(find_hermes)"
   if [ -n "$HERMES_BIN" ]; then
     ok "Hermes installed"
   else
