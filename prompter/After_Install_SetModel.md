@@ -28,13 +28,13 @@ Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstra
 
 ## b.2. harus autostart fully
 
-- (kalau OS nya Windows, b.2. ini harus lewat Powershell as Admin)
+- (kalau OS nya Windows, b.2. ini harus lewat Powershell as Admin, cara akses admin/root/sudo ada di b.5. poin 0 utk Win dan poin 0 utk linux)
 - yaitu selalu start di system level, sehingga bisa LINGER utk usernya (utk linux), dan bisa Run Without User Being Logged On (utk windows),
 - jadi waktu mesin kena restart/disconnect, bisa auto coba ulang TANPA MINTA PASSWORD ULANG... 
 
 ## b.3. autoupdate autoclean autorestart
 
-- (kalau OS nya Windows, b.3. ini harus lewat Powershell as Admin)
+- (kalau OS nya Windows, b.3. ini harus lewat Powershell as Admin, cara akses admin/root/sudo ada di b.5. poin 0 utk windows dan poin 0 utk linux)
 - tiap akhir hari WIB selalu clean file sampah, lalu restart gateway..., 
 - juga waktu ada system/hermes update, langsung lakukan otomatis update apt (kalau linux), lalu restart gateway....
 
