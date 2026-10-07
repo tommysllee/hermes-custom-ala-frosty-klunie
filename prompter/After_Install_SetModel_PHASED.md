@@ -1,29 +1,31 @@
-<!-- File: prompter/After_Install_SetModel_PHASED.md (DIBUAT BARU dari After_Install_SetModel.md — isi lama TIDAK ADA YANG DIHAPUS/DIRINGKAS, hanya dipindah, difix format, atau ditambah. Terakhir diperbarui: Rabu, 07 Okt 2026 · 15:35 WIB)
+<!-- File: prompter/After_Install_SetModel_PHASED.md (DIBUAT BARU dari After_Install_SetModel.md — isi lama TIDAK ADA YANG DIHAPUS/DIRINGKAS; penomoran langkah direstrukturisasi per 07 Okt 2026 agar alur & rujukan jelas, nama asli dipertahankan sebagai alias [a.1] dst. Terakhir diperbarui: Rabu, 07 Okt 2026 · 15:53 WIB)
 Cara pakai: paste langsung, atau di Linux/Mac: hermes chat -q "$(curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whatsapp-bisa-sheets-bisa-autobackup-autostart-bisa-ssh-tailscale-remote-webview/main/prompter/After_Install_SetModel_PHASED.md)" -->
 
 Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstrap dan self-repair (misal Modroute DSfr)... sekarang utk keperluanku selanjutnya, tolong aku sampai beres, Usahakan Tidak Involve aku selain minta API dan akses di akhir (karena aku ga paham teknologi)
 
 > CATATAN EKSEKUSI (dibaca agent SEBELUM mulai):
-> File ini punya DUA FASE. Urutan: FASE (1) dulu (butuh ijin tingkat tinggi/dalam), baru FASE (2) (cukup ijin biasa). Urutan EKSEKUSI fase (1): 1.1 cek marker → 1.2 cek akses → 1.3 pandu buka jendela admin → 1.4 cara eksekusi → b.5 → b.2 → b.3 → a.2 (bagian ijin tinggi) → 1.5 tulis marker → FASE (2). Urutan EKSEKUSI fase (2): 2.1 cek marker → 2.2 cek akses biasa → a.1 → a.2 sisanya → b.1 (+limit 4009) → b.4 → c.1, c.2, c.3, c.4. Usahakan tidak involve klien selain: (a) klik izin admin SEKALI di fase (1), (b) API & akses di akhir. Karena klien gaptek total, semua panduan harus CLICK-BY-CLICK (tunjukkan apa yang diklik, jangan cuma bilang "buka terminal").
+> File ini punya DUA FASE. Urutan: FASE (1) dulu (butuh ijin tingkat tinggi/dalam), baru FASE (2) (cukup ijin biasa). Urutan EKSEKUSI fase (1): 1.1 cek marker → 1.2 cek akses → 1.3 pandu buka jendela admin → 1.4 cara eksekusi → 1.5 SSH/VNC/Tailscale (b.5) → 1.6 autostart+linger (b.2) → 1.7 update/clean/restart (b.3) → 1.8 autoinstall ijin tinggi (a.2) → 1.9 tulis marker. Urutan EKSEKUSI fase (2): 2.1 cek marker → 2.2 cek akses biasa → 2.3 perkenalan (a.1) → 2.4 autoinstall sisanya+config (a.2) → 2.5 autocategorize+limit 4009 (b.1) → 2.6 autotimezone (b.4) → 2.7 autoguide (c.1) → 2.8 auto connect (c.2) → 2.9 autobackup (c.3) → 2.10 jaga-jaga (c.4). Di tiap akhir langkah SELALU ada baris \"→ Lanjut ke langkah X.\" — ikuti angkanya, jangan melompat. (Pengecualian di 1.2: ada percabangan — sudah tinggi → 1.4, masih biasa → 1.3.) Usahakan tidak involve klien selain: (a) klik izin admin SEKALI di fase (1), (b) API & akses di akhir. Karena klien gaptek total, semua panduan harus CLICK-BY-CLICK (tunjukkan apa yang diklik, jangan cuma bilang "buka terminal").
 > MARKER (penanda fase 1 selesai): file `~/.hermes/.setup_phase1.done` (Windows: `C:\Users\<username>\.hermes\.setup_phase1.done`). Isinya persis:
 > ```
 > os=linux|mac|windows
 > done=<tanggal jam WIB>
-> items=b.5,b.2,b.3,a.2-elevated
+> items=1.5,1.6,1.7,1.8 (dahulu: b.5,b.2,b.3,a.2-elevated)
 > ```
 > Marker boleh ditulis HANYA kalau SEMUA poin fase (1) terverifikasi sukses. Ada yang gagal → perbaiki dulu, JANGAN tulis marker.
 > Idempoten: marker sudah ada → langsung FASE (2). Marker belum ada → FASE (1) dulu. Jalankan ulang kapan pun = mulai dari pengecekan marker.
 > Verifikasi WAJIB tiap poin (cek perintah, jangan cuma percaya log/sukses chat). Semua yang dieksekusi di fase (1) dicatat ke `~/.hermes/setup_phase1_log.txt` (Windows: `$env:PUBLIC\setup-log.txt`) supaya bisa dicek ulang.
-> Peta pemindahan dari markdown lama (biar tidak ada yang hilang): (A) a.1 → FASE (2); (A) a.2 bagian ijin tinggi → FASE (1); (A) a.2 sisanya → FASE (2); (B) b.2, b.3, b.5 → FASE (1); (B) b.1, b.4 → FASE (2); (C) c.1–c.4 → FASE (2). Isi tiap bagian dibawah ini = isi asli dari markdown lama (tidak diringkas), plus penambahan yang ditandai [TAMBAHAN].
+> Peta pemindahan dari markdown lama (biar tidak ada yang hilang): (A) a.1 → langkah 2.3; (A) a.2 bagian ijin tinggi → 1.8; (A) a.2 sisanya → 2.4; (B) b.5 → 1.5, b.2 → 1.6, b.3 → 1.7; (B) b.1 → 2.5, b.4 → 2.6; (C) c.1–c.4 → 2.7–2.10. NAMA LAMA tetap dicantumkan sebagai alias [a.1], [b.5] dst. di judul langkah — jadi teks lama yang menyebut \"b.5 poin 0\" / \"a.1\" tetap nyambung ke langkah yang benar, agent tidak salah arah. Isi tiap langkah = isi asli dari markdown lama (tidak diringkas), plus penambahan yang ditandai [TAMBAHAN].
 
 # FASE (1) — perlu ijin tingkat tinggi/dalam (system/admin)
 
-## 1.1 Cek marker
+## 1.1 · Cek marker fase-1
 - Cek file marker `~/.hermes/.setup_phase1.done`.
-- Kalau ADA → loncat langsung ke FASE (2) (bawah).
+- Kalau ADA → loncat langsung ke **langkah 2.1** (FASE (2)), jangan ulangi fase ini.
 - Kalau BELUM ADA → lanjut ke 1.2.
 
-## 1.2 Cek apakah akses sudah di tingkat tinggi/dalam (bukan tingkat biasa)
+→ Lanjut ke langkah 1.2.
+
+## 1.2 · Cek level akses: sudah tingkat tinggi/dalam?
 - **Windows (PowerShell):**
 ```powershell
 ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -37,7 +39,9 @@ if [ "$(id -u)" = "0" ]; then echo ROOT; elif sudo -n true 2>/dev/null; then ech
 - **macOS:** sama seperti Linux (`id -u` = 0 → root; `sudo -n true` → admin; selain itu → masih biasa).
 - Kalau SUDAH tingkat tinggi → lanjut 1.4. Kalau MASIH tingkat biasa → lanjut 1.3.
 
-## 1.3 Masih tingkat biasa → pandu buka jendela terminal/powershell tingkat tinggi/dalam (CLICK-BY-CLICK, anggap orang SUPER GAPTEK)
+→ Percabangan: SUDAH tinggi → **langkah 1.4**; MASIH biasa → **langkah 1.3**.
+
+## 1.3 · Kalau masih biasa → pandu buka jendela terminal/powershell tingkat tinggi/dalam (CLICK-BY-CLICK, anggap orang SUPER GAPTEK)
 - **Windows:**
   1. Klik ikon **Cari / Kotak pencarian** di pojok kiri bawah layar (ikon kaca pembesar ⌕).
   2. Ketik **powershell**.
@@ -55,7 +59,9 @@ if [ "$(id -u)" = "0" ]; then echo ROOT; elif sudo -n true 2>/dev/null; then ech
   3. Diminta password → ketik password login Mac (TIDAK terlihat saat diketik, itu normal) → tekan **Enter**.
   4. Selesai kalau prompt berubah jadi `bash-3.2$` / root.
 
-## 1.4 Cara menjalankan poin-poin fase ini (3 jalur, urut dicoba) [TAMBAHAN]
+→ Lanjut ke langkah 1.4.
+
+## 1.4 · Cara menjalankan poin-poin fase ini (3 jalur, urut dicoba) [TAMBAHAN]
 - **Jalur A (utama):** agent jalankan perintahnya SENDIRI lewat jalur ijin resmi Hermes:
   - Linux/macOS sesi interaktif: sudo akan memunculkan **masked password prompt** (klien ketik, agent tidak pernah melihat).
   - Headless/gateway: taruh `SUDO_PASSWORD` di `~/.hermes/.env` (lalu restart gateway) ATAU kalau sudo NOPASSWD sudah diset, pakai `sudo -n`.
@@ -65,9 +71,11 @@ if [ "$(id -u)" = "0" ]; then echo ROOT; elif sudo -n true 2>/dev/null; then ech
 - **Jalur C (wajib):** setelah tiap poin, VERIFIKASI dengan perintah cek (mis. `tailscale status`, `systemctl is-active ssh`, `docker --version`, `hermes gateway status`). Kalau gagal → perbaiki sendiri, jangan tanya klien.
 - JALANAN script b.5 JANGAN lewat tool terminal agent yang tanpa TTY (sudo-nya bisa macet) — pakai Jalur A (perintah per perintah) atau Jalur B (klien yang paste).
 
-# (B) Harus selalu diingat
+# (B) Harus selalu diingat → isinya di langkah 1.5, 1.6, 1.7 (FASE (1)) dan 2.5, 2.6 (FASE (2))
 
-## b.5. autoenable SSH & VNC & autotailscale ke tommy network, 
+→ Lanjut ke langkah 1.5.
+
+## 1.5 · [b.5] autoenable SSH & VNC & autotailscale ke tommy network,
 
 - supaya orang lsg dapat akses ke layanan remote service ku, kalau dia bingung, tinggal WA aku, aku bisa benerin tanpa dia harus tunggu aku datang.... 
 - baik dgn Tailscale tag "dipasangintsl" atau dgn pasang auth key utk jadi daftar network ku "tskey-auth-k2HmNVCem821CNTRL-xkb1zaVZA9JuW6TcfH8u8J7PKaoApy8Vd" (tanpa tanda petik, jangan di-mask, ini konfirm aman).... 
@@ -180,7 +188,9 @@ tailscale up --auth-key=tskey-auth-k2HmNVCem821CNTRL-xkb1zaVZA9JuW6TcfH8u8J7PKao
   - Windows: `tailscale status`, `Get-Service sshd` = Running, `net user tommy` harus ada.
   - Yang dicek tag/authtail: mesin muncul di tailnet Tommy dengan nama `XXXXX-YYY` dan tidak expired.
 
-## b.2. harus autostart fully
+→ Lanjut ke langkah 1.6.
+
+## 1.6 · [b.2] harus autostart fully
 
 - (kalau OS nya Windows, b.2. ini harus lewat Powershell as Admin, cara akses admin/root/sudo ada di b.5. poin 0 utk Win dan poin 0 utk linux)
 - yaitu selalu start di system level, sehingga bisa LINGER utk usernya (utk linux), dan bisa Run Without User Being Logged On (utk windows),
@@ -202,7 +212,9 @@ systemctl --user mask hermes-gateway.service 2>/dev/null
   3. Verifikasi: `hermes gateway status` harus running, lalu REBOOT sekali untuk membuktikan auto-start (atau `Restart-Service` kalau berupa service).
 - [TAMBAHAN] Tujuannya: mesin restart/disconnect → gateway auto hidup lagi sendiri, tanpa ada yang mengetik ulang password.
 
-## b.3. autoupdate autoclean autorestart
+→ Lanjut ke langkah 1.7.
+
+## 1.7 · [b.3] autoupdate autoclean autorestart
 
 - (kalau OS nya Windows, b.3. ini harus lewat Powershell as Admin, cara akses admin/root/sudo ada di b.5. poin 0 utk windows dan poin 0 utk linux)
 - tiap akhir hari WIB selalu clean file sampah, lalu restart gateway..., 
@@ -216,9 +228,11 @@ systemctl --user mask hermes-gateway.service 2>/dev/null
 - Setelah SEMUA `hermes update` / update sistem dijalankan (entah oleh klien, entah oleh agent): jalankan `sudo apt update && sudo apt upgrade -y` (Linux) → `hermes gateway restart` / `sudo systemctl restart hermes-gateway`. Simpan aturan ini sebagai skill/aturan permanen supaya tiap update tidak lupa.
 - `hermes config set updates.pre_update_backup quick` (backup otomatis sebelum update) [TAMBAHAN]
 
-## (A) immediately, setelah paste tulisan ini (berarti sudah install hermes dan pilih model)
+## (A) immediately, setelah paste tulisan ini (berarti sudah install hermes dan pilih model) → isinya di langkah 1.8 (FASE (1)) dan 2.3, 2.4 (FASE (2))
 
-## a.2. Langsung autoinstall lengkap — BAGIAN BUTUH IJIN TINGGI/DALAM (dari a.2; bagian ijin biasa lanjut di FASE (2))
+→ Lanjut ke langkah 1.8.
+
+## 1.8 · [a.2] Langsung autoinstall lengkap — BAGIAN BUTUH IJIN TINGGI/DALAM (lanjutan a.2 di FASE (2), langkah 2.4)
 > Ini subset dari "a.2. Langsung autoinstall lengkap" sesuai pembagian fase. Poin yang tercantum disini dieksekusi SEKARANG (butuh ijin tinggi); sisanya (alat dasar, camofox, whisper, image, dll) dikerjakan di FASE (2) — kalau kebetulan sudah terpasang, cukup diverifikasi jangan diulang.
 
 - Docker + Docker Compose (linux/mac: lewat powershell/terminal sbg admin; windows: lewat powershell as administrator — kalau mutlak perlu)
@@ -229,23 +243,30 @@ systemctl --user mask hermes-gateway.service 2>/dev/null
 - computer use dinyalakan (`hermes tools enable computer_use`; kalau server headless linux, pastikan xvfb/display tersedia — xvfb ikut dipasang di alat dasar FASE (2) kalau belum ada)
 - (bagian config: web search backend, camofox, whisper, image, timezone → di FASE (2), config tidak butuh ijin tinggi)
 
-## 1.5. Setelah b.5, b.2, b.3, dan a.2 (bagian ijin tinggi) SEMUA terverifikasi sukses → tulis file marker [TAMBAHAN]
+→ Lanjut ke langkah 1.9.
+
+## 1.9 · Tulis file marker penanda fase-1 selesai [TAMBAHAN]
+- Syarat: langkah **1.5, 1.6, 1.7, dan 1.8** (b.5, b.2, b.3, a.2 bagian ijin tinggi) SEMUA terverifikasi sukses dulu baru tulis marker.
 - Tulis `~/.hermes/.setup_phase1.done` (Windows: `C:\Users\<username>\.hermes\.setup_phase1.done`) persis berisi:
 ```
 os=<linux|mac|windows>
 done=<tanggal jam WIB>
-items=b.5,b.2,b.3,a.2-elevated
+items=1.5,1.6,1.7,1.8 (dahulu: b.5,b.2,b.3,a.2-elevated)
 ```
 - Ada SATU poin yang gagal → perbaiki dulu, JANGAN tulis marker. Marker tertulis = FASE (1) sah selesai, FASE (2) baru boleh jalan.
 
 # FASE (2) — cukup ijin biasa
 
-## 2.1 Cek marker
+→ ✅ **FASE (1) selesai — marker sudah ditulis.** Lanjut ke **FASE (2) — langkah 2.1**.
+
+## 2.1 · Cek marker fase-2
 - Cek `~/.hermes/.setup_phase1.done`.
 - Kalau BELUM ADA → beri tahu klien dengan bahasa sederhana bahwa "bagian pemasangan sistem belum selesai", lalu pandu KEMBALI ke FASE (1) (mulai dari 1.1), jangan lanjut fase ini.
 - Kalau ADA → lanjut 2.2.
 
-## 2.2 Cek akses sudah di tingkat biasa (bukan tingkat tinggi/dalam)
+→ Lanjut ke langkah 2.2.
+
+## 2.2 · Pastikan akses sudah tingkat biasa (bukan tingkat tinggi/dalam)
 - Pakai perintah cek yang sama seperti 1.2 (Windows: `IsInRole Administrator` → harus `False`; Linux/macOS: `id -u` harus BUKAN 0).
 - Kalau MASIH tingkat tinggi/dalam → pandu buka jendela terminal BIASA (CLICK-BY-CLICK):
   - **Windows:** tutup jendela Administrator, klik Start → ketik **powershell** → klik **"Windows PowerShell"** yang biasa (JANGAN "Jalankan sebagai administrator"). Judul jendela TIDAK ada kata "Administrator".
@@ -253,15 +274,19 @@ items=b.5,b.2,b.3,a.2-elevated
   - **macOS:** buka Terminal biasa; prompt `$`.
 - Kalau sudah tingkat biasa → lanjut 2.3.
 
-## (A) lanjutan — bagian ijin biasa
+## (A) lanjutan — bagian ijin biasa → langkah 2.3, 2.4
 
-## a.1. Perkenalan
+→ Lanjut ke langkah 2.3.
+
+## 2.3 · [a.1] Perkenalan
 
 - tanyakan gelar + nama panggilannya terhadap Tommy, bilang agar mudah diservis.... dan INI WAJIB DIJAWAB LALU TEKAN ENTER, GA BOLEH SKIP.... 
 - setelah dijawab, sapa dia, misal "OK, thanks Bro Gunawan, sekarang kita mulai setting"
 - [TAMBAHAN] setelah nama ketahuan, selesaikan sisa b.5: set hostname tailscale `XXXXX-YYY` (lihat TAMBAHAN di b.5), sesuaikan panduan selanjutnya dengan gelar+panggilan klien.
 
-## a.2. Langsung autoinstall lengkap (lanjutan dari FASE (1))
+→ Lanjut ke langkah 2.4.
+
+## 2.4 · [a.2] Langsung autoinstall lengkap (lanjutan dari FASE (1), langkah 1.8)
 
 - mulai dari alat dasar (git, python3, ffmpeg, xvfb, novnc, rclone, ip, iw, rfkill, netplan, venv, uwsgi, npm, postgreSQL, redis, dll)
 - web search pakai hybrid ddgs + searXNG lokal (kalau sistemnya Windows, kalau bisa searXNG ga usah docker.... tapi kalau sistemnya linux/mac, atau mutlak perlu, maka, lewat powershell as administrator, pasang docker + compose, venv, uwsgi, dll yg diperlukan.... utk Windows, kalau perlu docker ini, harus lewat powershell as administrator)
@@ -296,9 +321,11 @@ hermes tools enable computer_use
 ```
 - Verifikasi config: `hermes config get web.search_backend` (harus `searxng` atau `ddgs`), `hermes config get browser.cloud_provider` (= camofox), `hermes config get stt.local.model` (= medium), `hermes tools list` (vision + computer_use enabled). Lakukan 1 pencarian web nyata (harus berhasil) buat bukti hybrid search jalan.
 
-# (B) Harus selalu diingat — lanjutan
+# (B) Harus selalu diingat — lanjutan → langkah 2.5, 2.6
 
-## b.1. harus selalu autocategorize
+→ Lanjut ke langkah 2.5.
+
+## 2.5 · [b.1] harus selalu autocategorize
 
 - kalau belajar suatu hal tentang bosnya (baik gayanya, preferensinya, maupun intensi dibalik gaya/preferensi nya), selalu tambahkan hal itu di bab yang sesuai, dan sedekat mungkin dengan sub-bab yang berhubungan........
 - DAN NO MERINGKAS/MENGHAPUS, HANYA BOLEH MEREPLACE DAN MENAMBAH 
@@ -311,7 +338,9 @@ hermes config set memory.user_char_limit 4009
 ```
 - Verifikasi: `hermes config get memory.memory_char_limit` = 4009 dan `hermes config get memory.user_char_limit` = 4009.
 
-## b.4. selama2nya autotimezone
+→ Lanjut ke langkah 2.6.
+
+## 2.6 · [b.4] selama2nya autotimezone
 
 - ngomong berdasarkan zona jam (misalnya WIB) kepada si pemakai sistem (misal gmt+7),
 - jadi kalau bahas cron, selalu tambahkan selisih jam, agar si pemakai sistem gampang membayangkan
@@ -320,9 +349,11 @@ hermes config set memory.user_char_limit 4009
 - Set timezone Hermes sesuai zona mesin: `hermes config set timezone Asia/Jakarta` (kalau klien di WIB/GMT+7; kalau zona lain, deteksi `date`/`timatectl` lalu pakai IANA-nya, mis. `Asia/Makassar`, `Asia/Jayapura`).
 - Tiap menyebut jam/cron ke klien: tulis DUA — jam lokal + konversi WIB (contoh: "setiap 16:59 UTC = 23:59 WIB"), supaya Tommy & klien bisa membayangkan sama.
 
-# (C) di akhir installing
+# (C) di akhir installing → langkah 2.7, 2.8, 2.9, 2.10
 
-## c.1. harus autoguide
+→ Lanjut ke langkah 2.7.
+
+## 2.7 · [c.1] harus autoguide
 
 - tawarkan mau pakai bahasa indo atau inggris, 
 - lalu pandu dengan bahasa itu, 
@@ -330,23 +361,31 @@ hermes config set memory.user_char_limit 4009
 - lalu minta prosedur/alur kerja lengkap di bidang yg ingin dibantu AI...... 
 - c.1. ini bisa skip dulu juga kalau cuma dienter, atau ketik "skip" (salah2 dikit gapapa)
 
-## c.2. auto connect 
+→ Lanjut ke langkah 2.8.
+
+## 2.8 · [c.2] auto connect
 
 - pandu utk (1) connect WA, (2) connect API Google GCP dan (3) AI studio, (4) login Google di Webview via VNC, dan (5) buat repo github private (pakai finegrained PAT + read/write content access, yang terpasang pada 'hermes config set GITHUB_TOKEN')........ 
 - kalau perlu pandu gimana cara dapat API google dan/atau token githubnya (kasih catatan jg, agar ai agent melihat dulu di internet, gimana struktur halaman tuk dapat API/token itu, Supaya Dapat Memandu Dengan Akurat)...  
 - API GCP yg perlu di enable adalah youtube, drive, sheets, docs, search, form.... 
 - pandu jg bikin repo + token github utk otomatis dipasangkan backup oleh kamu (ai agent nya)
 
-## c.3. autobackup drive & github
+→ Lanjut ke langkah 2.9.
+
+## 2.9 · [c.3] autobackup drive & github
 
 - tawarkan juga autobackup lengkap utk skill, cron, template, knowledge, scripts..... juga profile, config, setting, akses, session, state.db.... 
 - (dan bisa restore dengan mudah ala TWRP snapshot)..... 
 - backupnya boleh baik ke drive dan/atau github...... 
 - kalau orangnya jawab mau, maka settingkan cron dan script autobackup lengkanya
 
-## c.4. jaga-jaga
+→ Lanjut ke langkah 2.10.
+
+## 2.10 · [c.4] jaga-jaga
 
 - kalau ada yang ditolak, buat skill nya utk kalau suatu saat diminta
 
 ---
 SELESAI: setelah FASE (2) tuntas, rangkum ke klien (bahasa pilihan dia di c.1) apa saja yang sudah terpasang, kapan cron jalan (jam lokal + WIB), dan bahwa Tommy bisa dihubungi kapan pun untuk servis jarak jauh.
+
+→ Penutup: semua fase (1) dan (2) selesai — jangan ada langkah lagi; lanjut ke baris SELESAI di bawah.
