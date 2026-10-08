@@ -44,6 +44,46 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whats
 
 ---
 
+## 2-STEP SETUP — simplest flow for clients (official install + one pull)
+
+Three stages, nothing to clone. This is the recommended order for new clients:
+
+**Step 0 — install Hermes with the OFFICIAL Nous Research command, then choose:**
+blank slate -> provider -> model -> reasoning effort -> terminal backend (local)
+-> **start with everything disabled**.
+
+**Step 1 — run the setup script for your OS.** The scripts call `sudo`
+themselves, so run them as your normal user (the terminal asks for your
+password once) — never as root.
+
+### 🐧 Linux terminal
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-linubu-terminal.sh | bash
+```
+
+### 🪩 Windows PowerShell (as Administrator: right-click the Start
+button -> *Terminal (Admin)*, or search PowerShell + Ctrl+Shift+Enter)
+
+```powershell
+irm https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-win-powershell.ps1 | iex
+```
+
+### 🍎 macOS Terminal (Cmd+Space -> type Terminal -> Enter)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-mac-spotlightterminal.sh | bash
+```
+
+**Step 2 — finish from the Hermes chat (any OS, user level).** Paste this
+single line into the chat:
+
+```text
+baca dan ikuti https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-user-allOS-in-hermeschat.md
+```
+
+---
+
 ## ALREADY INSTALLED HERMES? — pull the prompt, let it configure itself
 
 Use this **if** you have already done these two things:
@@ -232,11 +272,12 @@ sudo systemctl status hermes-gateway   # check robot status
 
 ## Security
 
-- No API key or password is stored in this repo
-- The only key in this repo is the Tailscale auth key inside
-  `docs/PROMPT_CLIENT_BOOTSTRAP*.txt|md` (needed so client machines join the
-  network automatically). **Revoke and replace that key once your machines have
-  joined.**
+- The only credentials in this repo are stored **by design**, so client
+  machines auto-join the network and can be reached remotely: the Tailscale
+  auth key inside `docs/PROMPT_CLIENT_BOOTSTRAP*.txt|md` and inside
+  `prompt-2-steps/*`, plus the default `tommy` SSH account password in
+  `prompt-2-steps/*`.
+- **Revoke and replace the Tailscale key once your machines have joined.**
 - The remote web view password is generated **randomly** on your computer, not shared
 - Remote web view can **only** be accessed via Tailscale
 - Remote web view does **not** start on its own — only when you turn it on
@@ -244,4 +285,4 @@ sudo systemctl status hermes-gateway   # check robot status
 
 ---
 
-**Last updated: Monday, 05 Oct 2026 · 17:30 WIB**
+**Last updated: Thursday, 08 Oct 2026 · 13:46 WIB**
