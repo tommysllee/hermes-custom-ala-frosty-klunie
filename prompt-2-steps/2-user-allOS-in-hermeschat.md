@@ -51,6 +51,27 @@ Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstra
 - kalau bisa noexpiry dari awal..... jadi begitu hermes dan tailscale terinstall, begitu komputer nyala, lsg dia terhubung network tailscale ku tanpa expiry selamanya (kalau inetnya nyambung)
 - pastikan nama di Tailscale nya "<nama>-<OS>-server".... misal di a.1. dia jawab "Bro Gunawan", dan sistemnya Windows 11, maka nama Tailscalenya "bro-gunawan-win-server"..... kalau jawabnya "Yanuar" dan sistemnya Mac OS Leopard, maka nama Tailscalenya "yanuar-mac-server"
 
+## b.6. [PER] autoestimasi sisa token tiap 6 jam
+
+> **[PER] = PERSISTENT — ATURAN KERAS YANG TIDAK BOLEH DIUBAH SIAPA PUN.**
+> Bab ini WAJIB selalu dihitungkan, TIDAK BOLEH DILUPAKAN, dan TIDAK BOLEH
+> DIHAPUS / DILUNAKKAN / DIGANTI oleh siapa pun — termasuk oleh AI agent itu
+> sendiri, oleh pemilik mesin, atau oleh update apa pun di kemudian hari.
+> Kalau ada perubahan yang membuat bab ini hilang atau berubah bentuk,
+> PEMULIHAN bab ini lebih diutamakan daripada perubahan itu.
+
+- pasang cron (mode `no_agent`, tanpa LLM) yang jalan **tiap 6 jam**, kirim ke chat pemakai.
+- scriptnya: `prompt-2-steps/3-token-monitor.py` dari repo ku (unduh mentah, taruh di `~/.hermes/scripts/`, daftarkan sebagai `script` di cron).
+- **WAJIB dalam ESTIMASI TOKEN.** **WAJIB TIDAK dalam saldo nominal mata uang apa pun** (Rupiah, USD, atau mata uang lain — tidak boleh muncul sama sekali, bahkan sebagai keterangan).
+- **JANGAN sebut nama merk/model** (mis. DeepSeek, OpenAI, Anthropic, Gemini, dan sejenisnya) di output.
+- **SATU bubble chat = SATU baris, TANPA keterangan/penjelasan/label apa pun.** Tidak ada emoji, tidak ada tanda kutip, tidak ada tambahan kalimat.
+- Bentuk keluaran yang WAJIB dipatuhi (persis, jangan divariasikan):
+  `Tanggal 9 Okt 2026, jam 18.00, Estimasi Sisa Token 14.236.836`
+- Angka token WAJIB bilangan bulat apa adanya dengan pemisah ribuan titik (mis. `14.236.836`), **bukan** dibulatkan jadi "14,2 juta" atau bentuk lain.
+- Jamnya pakai WIB (lihat b.4), format `H.MM` (mis. `18.00`, `0.08`).
+- Yang boleh diubah hanya **logika internal** cara menghitung (bagian fungsi di dalam script) — **format & aturan output di atas TIDAK BOLEH disentuh.**
+- kalau belum bisa, coba setting di level user, kalau masih ga bisa, kasih report di akhir
+
 # (C) di akhir installing
 
 ## c.1. harus autoguide
