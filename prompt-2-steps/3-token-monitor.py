@@ -37,10 +37,6 @@ MIN_TOKEN_RIWAYAT = 1000  # di bawah ini dianggap data belum cukup
 # Token dihitung input+output saja (TANPA cache-read) -> estimasi sederhana
 # yang konservatif dan gampang dibayangkan pemakai.
 
-# Cadangan kalau belum ada riwayat sama sekali (perkiraan kasar, USD/1jt token).
-# Dipakai HANYA untuk membagi sisa saldo -> token, tidak pernah ditampilkan.
-HARGA_CADANGAN_PER_JUTA = 0.40
-
 # Harga per 1 juta token, DIKALIBRASI dari rasio pemakaian nyata:
 #   masuk 78% x $0,15 + keluar 22% x $0,60 = $0,249 per 1 juta token.
 # Dipakai HANYA internal utk membagi saldo -> token; nama penyedia TIDAK
