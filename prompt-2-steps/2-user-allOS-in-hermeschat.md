@@ -61,7 +61,15 @@ Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstra
 > PEMULIHAN bab ini lebih diutamakan daripada perubahan itu.
 
 - pasang cron (mode `no_agent`, tanpa LLM) yang jalan **tiap 6 jam**, kirim ke chat pemakai.
-- scriptnya: `prompt-2-steps/3-token-monitor.py` dari repo ku (unduh mentah, taruh di `~/.hermes/scripts/`, daftarkan sebagai `script` di cron).
+- scriptnya: `prompt-2-steps/3-token-monitor.py` dari repo ku. Cara pasangnya (3 baris, jalankan apa adanya):
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/3-token-monitor.py -o ~/.hermes/scripts/3-token-monitor.py
+  chmod +x ~/.hermes/scripts/3-token-monitor.py
+  hermes cron create "0 */6 * * *" --name "Estimasi sisa token tiap 6 jam" --script 3-token-monitor.py --no-agent --deliver origin
+  ```
+
+  (`--no-agent` = stdout script dikirim apa adanya ke chat, tanpa lewat LLM; `--deliver origin` = ke chat asal pemakai).
 - **WAJIB dalam ESTIMASI TOKEN.** **WAJIB TIDAK dalam saldo nominal mata uang apa pun** (Rupiah, USD, atau mata uang lain — tidak boleh muncul sama sekali, bahkan sebagai keterangan).
 - **JANGAN sebut nama merk/model** (mis. DeepSeek, OpenAI, Anthropic, Gemini, dan sejenisnya) di output.
 - **SATU bubble chat = SATU baris, TANPA keterangan/penjelasan/label apa pun.** Tidak ada emoji, tidak ada tanda kutip, tidak ada tambahan kalimat.
