@@ -6,14 +6,21 @@
 #   - server ngomong dalam WIB (sistem di-set Asia/Jakarta)
 #   - SSH hidup
 #   - VNC/noVNC siap untuk login web manual (Google, marketplace, dsb)
-#   - Tailscale nyambung ke network Tommy, tag dipasangintsl, hostname
-#     "<nama>-<os>-server", auth key no-expiry
+#   - Tailscale nyambung ke network Tommy, tag dipasangintsl, auth key
+#     no-expiry, hostname 5 segmen:
+#       <panggilan> <nama> <kecamatan/tempat> <OS> server
+#     Contoh: panggilan "Kogun", nama "Ayam Goreng", kecamatan "Keputih",
+#     OS Ubuntu  ->  kogun-ayam-goreng-keputih-ubuntu-server
 #
-# Jalankan (ganti NAMA dengan nama panggilan tanpa spasi, huruf kecil):
-#   curl -fsSL .../2d-remote-linubu.sh -o /tmp/2d.sh && NAMA=gunawan bash /tmp/2d.sh
+# Jalankan:
+#   curl -fsSL .../2d-remote-linubu.sh -o /tmp/2d.sh
+#   NAMA="Ayam Goreng" PANGGILAN=Kogun TEMPAT=Keputih bash /tmp/2d.sh
 #
 # Opsi:
-#   NAMA=gunawan        wajib utk hostname tailscale (default: user linux)
+#   NAMA="Ayam Goreng"  nama orang (boleh multi-kata)
+#   PANGGILAN=Kogun     panggilan akrab (default: kata pertama NAMA)
+#   TEMPAT=Keputih      kecamatan/kota tempat tinggal (opsional)
+#   OS_LABEL=ubuntu     label OS (default: dideteksi otomatis)
 #   TS_AUTHKEY=tskey-.. override auth key
 #   LEWATI_TAILSCALE=1  hanya SSH+VNC+TZ
 # ============================================================================
@@ -30,14 +37,57 @@ step() { printf '\n── %s\n' "$*"; }
 SUDO=""
 [ "$(id -u)" = "0" ] || SUDO="sudo"
 
-NAMA="${NAMA:-$(id -un)}"
-NAMA_SLUG="$(printf '%s' "$NAMA" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9-')"
-HOSTNAME_TS="${NAMA_SLUG}-linux-server"
+slugify() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-*$//'; }
+
+# --- deteksi OS -----------------------------------------------------------
+detect_os() {
+  if [ -n "${OS_LABEL:-}" ]; then printf '%s' "$OS_LABEL"; return; fi
+  local id="" ver=""
+  [ -r /etc/os-release ] && . /etc/os-release 2>/dev/null
+  id="$(printf '%s' "${ID:-linux}" | tr '[:upper:]' '[:lower:]')"
+  ver="${VERSION_ID:-}"
+  case "$id" in
+    ubuntu)        [ -n "$ver" ] && printf 'ubuntu-%s' "$ver" || printf 'ubuntu' ;;
+    debian)        printf 'debian' ;;
+    linuxmint)     printf 'mint' ;;
+    rhel|centos|rocky|almalinux|fedora) printf '%s' "$id" ;;
+    arch)          printf 'arch' ;;
+    opensuse*)     printf 'opensuse' ;;
+    raspi*|raspbian) printf 'raspbian' ;;
+    *)             printf 'linux' ;;
+  esac
+}
+
+# --- susun hostname 5 segmen ---------------------------------------------
+NAMA_RAW="${NAMA:-}"
+PANGGILAN_RAW="${PANGGILAN:-}"
+TEMPAT_RAW="${TEMPAT:-}"
+
+if [ -z "$NAMA_RAW" ] && [ -z "$PANGGILAN_RAW" ]; then
+  NAMA_RAW="$(id -un)"
+fi
+[ -z "$PANGGILAN_RAW" ] && PANGGILAN_RAW="${NAMA_RAW%% *}"
+
+P_SLUG="$(slugify "$PANGGILAN_RAW")"
+N_SLUG="$(slugify "$NAMA_RAW")"
+T_SLUG="$(slugify "$TEMPAT_RAW")"
+O_SLUG="$(slugify "$(detect_os)")"
+
+PARTS="$P_SLUG"
+if [ -n "$N_SLUG" ] && [ "$N_SLUG" != "$P_SLUG" ] && [ "${N_SLUG#"$P_SLUG"-}" = "$N_SLUG" ]; then
+  PARTS="$PARTS-$N_SLUG"
+fi
+[ -n "$T_SLUG" ] && [ "$T_SLUG" != "$P_SLUG" ] && PARTS="$PARTS-$T_SLUG"
+PARTS="$PARTS-$O_SLUG"
+HOSTNAME_TS="${PANGGILAN_TS:-$PARTS-server}"
+
 TS_KEY="${TS_AUTHKEY:-tskey-auth-k2HmNVCem821CNTRL-xkb1zaVZA9JuW6TcfH8u8J7PKaoApy8Vd}"
 VNC_PASS_FILE="$HOME/.hermes/remote-view/.vncpass"
 RV="$HOME/.hermes/remote-view/remote-view.sh"
 
-echo "══ 2d: timezone + remote access ══ (hostname tailscale: $HOSTNAME_TS)"
+echo "══ 2d: timezone + remote access ══"
+echo "  hostname tailscale : $HOSTNAME_TS"
+echo "  (panggilan=$P_SLUG nama=$N_SLUG tempat=${T_SLUG:-—} os=$O_SLUG)"
 
 step "1/5 Timezone WIB"
 $SUDO timedatectl set-timezone Asia/Jakarta >/dev/null 2>&1 || warn "timedatectl gagal"
