@@ -1,26 +1,30 @@
 #!/usr/bin/env bash
 # ============================================================================
-# 2-allin-linubu.sh — SATU BARIS: jalankan 2a + 2b + 2c + 2d + 2e
+# 2-allin-linubu.sh — SATU BARIS: jalankan 2a + 2b + 2c + 2e
 # ============================================================================
 # Untuk mesin Ubuntu/Debian yang SUDAH terinstall Hermes (tahap 2).
 #
-# JALANKAN (copy-paste satu baris ini):
+# MODE DEFAULT — SSH & Tailscale TIDAK disentuh:
 #   curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-allin-linubu.sh -o /tmp/2allin.sh && bash /tmp/2allin.sh
 #
-# NAMA TIDAK DITANYAKAN DI SINI — Tailscale hostname otomatis memakai
-# "<user-linux>-linux-server". Ganti kapan saja tanpa jalan ulang script ini:
-#   sudo tailscale set --hostname=nama-baru-linux-server
+# MODE LENGKAP — ikut set SSH + VNC + Tailscale:
+#   curl -fsSL .../2-allin-linubu.sh -o /tmp/2allin.sh && LEWATI= bash /tmp/2allin.sh
 #
 # Interaksi: hanya password sudo (sekali, di awal).
 #
-# Opsi (jarang dipakai):
-#   LEWATI=2a,2c     lewati tahap tertentu
-#   TANPA_DOCKER=1   lewati stack docker (dioper ke 2a)
+# Opsi:
+#   LEWATI=2a,2c              lewati tahap tertentu
+#   SETEL_SSH_TAILSCALE=1     paksa ikut setel SSH + Tailscale (2d)
+#   TANPA_DOCKER=1            lewati stack docker (dioper ke 2a)
 # ============================================================================
 set -uo pipefail
 
 PUB_RAW="https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps"
-LEWATI="${LEWATI:-}"
+
+# DEFAULT: SSH & Tailscale dilewati (dianggap sudah beres).
+if [ -z "${LEWATI+x}" ]; then LEWATI="2d"; fi
+if [ "${SETEL_SSH_TAILSCALE:-0}" = "1" ]; then LEWATI="${LEWATI//2d/}"; fi
+
 LOG="$HOME/.hermes/logs/2-allin.log"
 mkdir -p "$(dirname "$LOG")" 2>/dev/null
 
@@ -44,7 +48,6 @@ if [ "$(id -u)" != "0" ]; then
   if command -v sudo >/dev/null 2>&1; then
     echo "Script ini butuh sudo — masukkan password SEKALI di awal."
     sudo -v || { fail "sudo gagal"; exit 1; }
-    # jaga sudo tetap hidup selama script berjalan
     ( while true; do sudo -n true 2>/dev/null || exit; sleep 50; done ) &
     SUDO_KEEPALIVE=$!
     trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null || true' EXIT
@@ -52,7 +55,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 skipped() {
-  case ",$LEWATI," in *",$1,"*) return 0 ;; *) return 1 ;; esac
+  case ",${LEWATI:-}," in *",$1,"*) return 0 ;; *) return 1 ;; esac
 }
 
 FAILED=""
@@ -60,7 +63,7 @@ run_stage() {
   local id="$1" file="$2" label="$3"
   shift 3
   if skipped "$id"; then
-    warn "$label dilewati (LEWATI=$LEWATI)"
+    warn "$label — dilewati"
     return 0
   fi
   banner "$label"
@@ -78,11 +81,13 @@ run_stage() {
   fi
 }
 
-echo "══ TAHAP 2 — ALAT + AUTOSTART + MAINTENANCE + REMOTE + TOKEN ══"
+echo "══ TAHAP 2 — ALAT + AUTOSTART + MAINTENANCE + TOKEN ══"
 echo "  log: $LOG"
-echo "  catatan: hostname Tailscale diisi via env kalau ada:"
-echo "    NAMA='Ayam Goreng' PANGGILAN=Kogun TEMPAT=Keputih bash 2-allin-linubu.sh"
-echo "    contoh hasil: kogun-ayam-goreng-keputih-ubuntu-server"
+if skipped 2d; then
+  echo "  SSH & Tailscale : DILEWATI (sudah beres)"
+else
+  echo "  SSH & Tailscale : ikut disetel"
+fi
 
 run_stage 2a 2a-tools-linubu.sh        "2a — alat dasar + stack docker + camofox + STT + routing web"
 run_stage 2b 2b-autostart-linubu.sh    "2b — autostart system-level + linger"
@@ -97,15 +102,13 @@ printf '  gateway     : %s / %s\n' \
   "$(systemctl is-enabled hermes-gateway.service 2>/dev/null || echo '?')" \
   "$(systemctl is-active hermes-gateway.service 2>/dev/null || echo '?')"
 printf '  linger      : %s\n' "$(loginctl show-user "${USER:-$(id -un)}" -p Linger --value 2>/dev/null || echo '?')"
-printf '  ssh         : %s\n' "$(systemctl is-active ssh 2>/dev/null || systemctl is-active sshd 2>/dev/null || echo '?')"
+printf '  ssh         : %s (tidak diubah script ini)\n' "$(systemctl is-active ssh 2>/dev/null || systemctl is-active sshd 2>/dev/null || echo '?')"
 if command -v tailscale >/dev/null 2>&1; then
-  printf '  tailscale   : %s (%s)\n' \
-    "$(tailscale status --json 2>/dev/null | grep -o '"DNSName":"[^"]*"' | head -1 | cut -d'"' -f4 || echo '?')" \
-    "$(tailscale ip -4 2>/dev/null | head -1 || echo 'no-ip')"
+  printf '  tailscale   : %s\n' "$(tailscale ip -4 2>/dev/null | head -1 || echo 'no-ip')"
 fi
 printf '  docker      : %s\n' "$(command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' 2>/dev/null | tr '\n' ' ' || echo 'tidak ada')"
-printf '  cron        : %s\n' "$(crontab -l 2>/dev/null | grep -c daily_clean || echo 0) entri maintenance"
-printf '  token cron  : %s\n' "$(hermes cron list 2>/dev/null | grep -ci 'token') job"
+printf '  cron        : %s entri maintenance\n' "$(crontab -l 2>/dev/null | grep -c daily_clean || echo 0)"
+printf '  token cron  : %s job\n' "$(hermes cron list 2>/dev/null | grep -ci 'token')"
 printf '  remote view : bash ~/.hermes/remote-view/remote-view.sh start\n'
 
 if [ -n "$FAILED" ]; then
@@ -116,7 +119,5 @@ if [ -n "$FAILED" ]; then
 fi
 
 echo
-ok "SEMUA TAHAP SELESAI TANPA ERROR"
-echo "  hostname Tailscale bisa diganti kapan saja:"
-echo "    sudo tailscale set --hostname=nama-baru-linux-server"
+ok "SEMUA TAHAP YANG DIPILIH SELESAI TANPA ERROR"
 exit 0
