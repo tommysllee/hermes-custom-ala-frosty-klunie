@@ -58,6 +58,12 @@ Langkah 3  chat Hermes          → kustomisasi: gaya kerja, autocategorize,
                                   connect WhatsApp/Google/GitHub, backup
 ```
 
+Cek kapan saja tanpa mengubah apa pun (kalau koneksi putus / lupa sudah sampai mana):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2z-dokter.sh -o /tmp/2z.sh && bash /tmp/2z.sh
+```
+
 > **Penting:** Langkah 2 **tidak** menanyakan nama, **tidak** menyentuh SSH,
 > **tidak** menyentuh Tailscale, dan **tidak** mengubah hostname. Semua itu
 > sudah dipasang di Langkah 1. Jadi aman dijalankan berulang.
@@ -103,7 +109,7 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty
 
 ---
 
-### Langkah 2 — SATU BARIS, tanpa pertanyaan
+## Langkah 2 — SATU BARIS, tanpa pertanyaan
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-allin-linubu.sh -o /tmp/2allin.sh && bash /tmp/2allin.sh
@@ -123,6 +129,22 @@ Interaksi manusia: **hanya password sudo sekali** di awal.
 
 Kalau sesuatu gagal, script tetap lanjut ke tahap berikutnya dan mencetak
 ringkasan tahap mana yang error. Log ada di `~/.hermes/logs/`.
+
+#### 🔍 Tidak tahu sudah sampai mana? Jalankan dokter
+
+Kalau koneksi terminal putus (Termius di HP, SSH, dsb.) dan kamu tidak tahu
+script sudah berhenti di tahap mana — jalankan ini. **Hanya memeriksa, tidak
+mengubah apa pun:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2z-dokter.sh -o /tmp/2z.sh && bash /tmp/2z.sh
+```
+
+Keluarannya: centang per langkah (0/1/2a/2c/2d/2e), daftar yang belum selesai,
+dan 12 baris terakhir log script terakhir yang jalan. Aman dijalankan kapan saja,
+berulang kali.
+
+---
 
 #### Kalau ingin SSH + Tailscale + hostname ikut disetel ulang
 
@@ -359,4 +381,4 @@ sudo systemctl status hermes-gateway   # check robot status
 
 ---
 
-**Last updated: Rabu, 21 Okt 2026 · 12:05 WIB**
+**Last updated: Rabu, 21 Okt 2026 · 18:20 WIB**
