@@ -4,11 +4,11 @@
 # ============================================================================
 # Untuk mesin Ubuntu/Debian yang SUDAH terinstall Hermes (tahap 2).
 #
-# MODE DEFAULT — SSH & Tailscale TIDAK disentuh:
+# MODE DEFAULT — SSH & Tailscale TIDAK disentuh, hostname TIDAK diubah:
 #   curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-allin-linubu.sh -o /tmp/2allin.sh && bash /tmp/2allin.sh
 #
-# MODE LENGKAP — ikut set SSH + VNC + Tailscale:
-#   curl -fsSL .../2-allin-linubu.sh -o /tmp/2allin.sh && LEWATI= bash /tmp/2allin.sh
+# MODE LENGKAP — ikut set SSH + VNC + Tailscale (hostname 5 segmen):
+#   curl -fsSL .../2-allin-linubu.sh -o /tmp/2allin.sh && SETEL_SSH_TAILSCALE=1 NAMA="Ayam Goreng" PANGGILAN=Kogun TEMPAT=Keputih bash /tmp/2allin.sh
 #
 # Interaksi: hanya password sudo (sekali, di awal).
 #
@@ -22,8 +22,14 @@ set -uo pipefail
 PUB_RAW="https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps"
 
 # DEFAULT: SSH & Tailscale dilewati (dianggap sudah beres).
-if [ -z "${LEWATI+x}" ]; then LEWATI="2d"; fi
-if [ "${SETEL_SSH_TAILSCALE:-0}" = "1" ]; then LEWATI="${LEWATI//2d/}"; fi
+# Mode default hanya menyisakan timezone WIB + VNC dari tahap 2d.
+if [ -z "${LEWATI+x}" ]; then LEWATI=""; fi
+SETEL_SSH_TAILSCALE="${SETEL_SSH_TAILSCALE:-0}"
+if [ "$SETEL_SSH_TAILSCALE" = "1" ]; then
+  unset LEWATI_SSH LEWATI_TAILSCALE
+else
+  export LEWATI_SSH=1 LEWATI_TAILSCALE=1
+fi
 
 LOG="$HOME/.hermes/logs/2-allin.log"
 mkdir -p "$(dirname "$LOG")" 2>/dev/null
@@ -81,18 +87,19 @@ run_stage() {
   fi
 }
 
-echo "══ TAHAP 2 — ALAT + AUTOSTART + MAINTENANCE + TOKEN ══"
+echo "══ TAHAP 2 — ALAT + AUTOSTART + MAINTENANCE + VNC + TOKEN ══"
 echo "  log: $LOG"
-if skipped 2d; then
-  echo "  SSH & Tailscale : DILEWATI (sudah beres)"
+if [ "$SETEL_SSH_TAILSCALE" = "1" ]; then
+  echo "  SSH & Tailscale : IKUT disetel (mode lengkap)"
 else
-  echo "  SSH & Tailscale : ikut disetel"
+  echo "  SSH & Tailscale : tidak disentuh (sudah dipasang di langkah 1)"
+  echo "  hostname server : tidak disentuh (sudah diset saat instalasi Ubuntu)"
 fi
 
 run_stage 2a 2a-tools-linubu.sh        "2a — alat dasar + stack docker + camofox + STT + routing web"
 run_stage 2b 2b-autostart-linubu.sh    "2b — autostart system-level + linger"
 run_stage 2c 2c-maintenance-linubu.sh  "2c — autoclean harian + autoupdate apt + restart gateway"
-run_stage 2d 2d-remote-linubu.sh       "2d — WIB + SSH + VNC + Tailscale"
+run_stage 2d 2d-remote-linubu.sh       "2d — timezone WIB + VNC (SSH/Tailscale dilewati)"
 run_stage 2e 2e-token-monitor.sh       "2e — monitor token tiap 6 jam"
 
 # ---- ringkasan ------------------------------------------------------------

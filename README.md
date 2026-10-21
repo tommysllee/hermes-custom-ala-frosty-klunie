@@ -44,46 +44,120 @@ curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-bisa-whats
 
 ---
 
-## 2-STEP SETUP — simplest flow for clients (official install + one pull)
+## 3-STEP SETUP — urutan resmi untuk klien baru
 
-Three stages, nothing to clone. This is the recommended order for new clients:
+Semua yang bisa dikerjakan tanpa penalaran AI sudah jadi script. Yang butuh
+percakapan/izin manusia baru dikerjakan di Langkah 3.
 
-**Step 0 — install Hermes with the OFFICIAL Nous Research command, then choose:**
-blank slate -> provider -> model -> reasoning effort -> terminal backend (local)
--> **start with everything disabled**.
+```
+Langkah 0  install Hermes (official, blank slate)
+Langkah 1  script infra per OS  → SSH, Tailscale, Docker, autostart dasar
+Langkah 2  SATU BARIS script    → alat, stack docker, camofox, STT, VNC,
+                                  autoclean, monitor token  (tanpa tanya apa pun)
+Langkah 3  chat Hermes          → kustomisasi: gaya kerja, autocategorize,
+                                  connect WhatsApp/Google/GitHub, backup
+```
 
-**Step 1 — run the setup script for your OS.** The scripts call `sudo`
-themselves, so run them as your normal user (the terminal asks for your
-password once) — never as root.
+> **Penting:** Langkah 2 **tidak** menanyakan nama, **tidak** menyentuh SSH,
+> **tidak** menyentuh Tailscale, dan **tidak** mengubah hostname. Semua itu
+> sudah dipasang di Langkah 1. Jadi aman dijalankan berulang.
 
-### 🐧 Linux terminal
+---
+
+### Langkah 0 — install Hermes (official Nous Research)
+
+Ikuti perintah resmi, lalu pilih:
+
+```
+blank slate → provider → model berbayar yang pintar → reasoning effort
+→ terminal backend: local → start with everything disabled
+```
+
+Model berbayar di awal mempercepat bootstrap & self-repair. Bisa diganti nanti.
+
+---
+
+### Langkah 1 — script infra sesuai OS
+
+Script memanggil `sudo` sendiri. Jalankan sebagai **user biasa**, jangan root.
+Di sinilah SSH, user, password, Tailscale, tag, hostname, Docker, dan autostart
+dasar dipasang.
+
+**🐧 Ubuntu / Debian**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-linubu-terminal.sh | bash
 ```
 
-### 🪩 Windows PowerShell (as Administrator: right-click the Start
-button -> *Terminal (Admin)*, or search PowerShell + Ctrl+Shift+Enter)
+**🪟 Windows (PowerShell as Administrator)**
 
 ```powershell
 irm https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-win-powershell.ps1 | iex
 ```
 
-### 🍎 macOS Terminal (Cmd+Space -> type Terminal -> Enter)
+**🍎 macOS (Terminal)**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/1-deep-mac-spotlightterminal.sh | bash
 ```
 
-**Step 2 — finish from the Hermes chat (any OS, user level).** Paste this
-single line into the chat:
+---
 
-```text
-baca dan ikuti https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-user-allOS-in-hermeschat.md
+### Langkah 2 — SATU BARIS, tanpa pertanyaan
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-allin-linubu.sh -o /tmp/2allin.sh && bash /tmp/2allin.sh
 ```
+
+Yang dikerjakan:
+
+| Tahap | Isi |
+|---|---|
+| **2a** | alat dasar apt (git, ffmpeg, xvfb, novnc, rclone, postgres, redis, …), Docker, SearXNG, Evolution API, Firecrawl, camofox, STT lokal whisper-medium, computer use, routing web search |
+| **2b** | autostart system-level + linger (konfirmasi ulang, idempoten) |
+| **2c** | autoclean tiap 23:45 WIB + autoupdate apt + restart gateway |
+| **2d** | timezone WIB + VNC/noVNC — **SSH & Tailscale dilewati** |
+| **2e** | cron monitor token tiap 6 jam (mode `no_agent`) |
+
+Interaksi manusia: **hanya password sudo sekali** di awal.
+
+Kalau sesuatu gagal, script tetap lanjut ke tahap berikutnya dan mencetak
+ringkasan tahap mana yang error. Log ada di `~/.hermes/logs/`.
+
+#### Kalau ingin SSH + Tailscale + hostname ikut disetel ulang
+
+Hanya untuk mesin yang Langkah 1-nya belum jalan:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/2-allin-linubu.sh -o /tmp/2allin.sh && SETEL_SSH_TAILSCALE=1 NAMA="Ayam Goreng" PANGGILAN=Kogun TEMPAT=Keputih bash /tmp/2allin.sh
+```
+
+Hostname yang dihasilkan: `kogun-ayam-goreng-keputih-ubuntu-server`
+(format: panggilan–nama–tempat–OS–server).
 
 ---
 
+### Langkah 3 — kustomisasi lewat chat Hermes
+
+Setelah alat terpasang, buka chat Hermes dan tempel satu baris ini:
+
+```text
+baca dan ikuti https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/3-user-kustomisasi-hermeschat.md
+```
+
+Yang dikerjakan Hermes di tahap ini (tidak bisa di-script karena butuh
+percakapan atau login manusia):
+
+- tanya gelar + nama panggilan, lalu gaya komunikasi
+- autocategorize memori/preferensi (tidak pernah menghapus, hanya menambah)
+- autoguide bahasa + minta profil kepribadian dari ChatGPT/Gemini/Claude
+- connect WhatsApp (scan QR), Google Cloud + AI Studio, login Google via VNC
+- buat repo GitHub private + PAT untuk backup
+- set cron autobackup penuh + panduan restore
+
+Bisa di-skip dengan mengetik `skip` saat ditawari.
+
+---
 ## ALREADY INSTALLED HERMES? — pull the prompt, let it configure itself
 
 Use this **if** you have already done these two things:
@@ -163,7 +237,7 @@ cd hermes-custom
 
 ---
 
-## After installation — 5 steps
+## Setelah Langkah 3 — hal yang masih manual (opsional)
 
 ### 1. Secure network (automatic, already running)
 
@@ -285,4 +359,4 @@ sudo systemctl status hermes-gateway   # check robot status
 
 ---
 
-**Last updated: Thursday, 08 Oct 2026 · 13:46 WIB**
+**Last updated: Rabu, 21 Okt 2026 · 12:05 WIB**

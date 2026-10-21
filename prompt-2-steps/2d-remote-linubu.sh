@@ -94,12 +94,16 @@ $SUDO timedatectl set-timezone Asia/Jakarta >/dev/null 2>&1 || warn "timedatectl
 ok "sistem: $(TZ=Asia/Jakarta date '+%Z %z · %A, %d %b %Y %H:%M')"
 
 step "2/5 SSH"
-if ! command -v sshd >/dev/null 2>&1 && ! dpkg -l openssh-server >/dev/null 2>&1; then
-  $SUDO apt-get install -y -qq openssh-server >/dev/null 2>&1 || warn "install ssh gagal"
+if [ "${LEWATI_SSH:-0}" = "1" ]; then
+  warn "SSH dilewati (LEWATI_SSH=1) — sudah dipasang saat instalasi Ubuntu"
+else
+  if ! command -v sshd >/dev/null 2>&1 && ! dpkg -l openssh-server >/dev/null 2>&1; then
+    $SUDO apt-get install -y -qq openssh-server >/dev/null 2>&1 || warn "install ssh gagal"
+  fi
+  $SUDO systemctl enable --now ssh >/dev/null 2>&1 || $SUDO systemctl enable --now sshd >/dev/null 2>&1 || true
+  systemctl is-active --quiet ssh 2>/dev/null && ok "SSH aktif" || warn "SSH tidak aktif"
+  $SUDO ufw allow 22/tcp >/dev/null 2>&1 || true
 fi
-$SUDO systemctl enable --now ssh >/dev/null 2>&1 || $SUDO systemctl enable --now sshd >/dev/null 2>&1 || true
-systemctl is-active --quiet ssh 2>/dev/null && ok "SSH aktif" || warn "SSH tidak aktif"
-$SUDO ufw allow 22/tcp >/dev/null 2>&1 || true
 
 step "3/5 VNC + noVNC"
 PKGS=""
