@@ -27,14 +27,20 @@ HERMES_BIN="$(command -v hermes || true)"
 
 SRC="https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/3-token-monitor.py"
 DST="$HOME/.hermes/scripts/3-token-monitor.py"
+SRC_SIDIK="$SRC.sidik"
+DST_SIDIK="$HOME/.hermes/scripts/3-token-monitor.sidik"
 
 echo "══ 2e: monitor token 6 jam ══"
 
-step "1/3 Unduh script"
+step "1/3 Unduh script + sidik jari"
 mkdir -p "$HOME/.hermes/scripts"
 if curl -fsSL "$SRC" -o "$DST"; then
   chmod +x "$DST"
   ok "$DST ($(wc -c < "$DST") byte)"
+  # sidik jari: penjaga ATURAN KERAS — kalau tidak ada, script tetap jalan
+  curl -fsSL "$SRC_SIDIK" -o "$DST_SIDIK" 2>/dev/null \
+    && ok "$DST_SIDIK (penjaga aturan terpasang)" \
+    || warn "sidik tidak terunduh — script tetap jalan tanpa penjaga"
 else
   warn "gagal unduh $SRC"
   exit 1

@@ -29,9 +29,9 @@ Usahakan tidak melibatkan aku selain saat minta API, login, atau scan QR.
 - Aturan output yang TIDAK BOLEH DIUBAH:
   - HANYA estimasi token. TIDAK BOLEH saldo nominal mata uang apa pun.
   - JANGAN sebut nama merk/model (DeepSeek, OpenAI, Anthropic, Gemini, dll).
-  - SATU bubble = SATU baris, tanpa label/emoji/keterangan.
-  - Bentuk: `Tanggal 9 Okt 2026, jam 18.00, Estimasi Sisa Token 14.236.836`
-  - Angka bulat dengan pemisah titik, jam WIB format `H.MM`.
+  - TEPAT 3 baris, tanpa label/emoji/keterangan tambahan.
+  - Bentuk: hari + tanggal, lalu dua baris estimasi token (lihat b.6 di dokumen 2)
+  - Angka diakhiri **"an"**, satu desimal: `3,2 juta an Token` · `1,1 juta an token`
 - Yang boleh diubah hanya logika hitung di dalam script. Format output tidak boleh disentuh.
 
 ## b.4. konfirmasi autostart

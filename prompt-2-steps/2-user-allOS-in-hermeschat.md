@@ -72,12 +72,22 @@ Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstra
   (`--no-agent` = stdout script dikirim apa adanya ke chat, tanpa lewat LLM; `--deliver origin` = ke chat asal pemakai).
 - **WAJIB dalam ESTIMASI TOKEN.** **WAJIB TIDAK dalam saldo nominal mata uang apa pun** (Rupiah, USD, atau mata uang lain — tidak boleh muncul sama sekali, bahkan sebagai keterangan).
 - **JANGAN sebut nama merk/model** (mis. DeepSeek, OpenAI, Anthropic, Gemini, dan sejenisnya) di output.
-- **SATU bubble chat = SATU baris, TANPA keterangan/penjelasan/label apa pun.** Tidak ada emoji, tidak ada tanda kutip, tidak ada tambahan kalimat.
+- **TEPAT 3 BARIS, tanpa keterangan/penjelasan/label tambahan.** Tidak ada emoji, tidak ada tanda kutip, tidak ada kalimat lain.
 - Bentuk keluaran yang WAJIB dipatuhi (persis, jangan divariasikan):
-  `Tanggal 9 Okt 2026, jam 18.00, Estimasi Sisa Token 14.236.836`
-- Angka token WAJIB bilangan bulat apa adanya dengan pemisah ribuan titik (mis. `14.236.836`), **bukan** dibulatkan jadi "14,2 juta" atau bentuk lain.
-- Jamnya pakai WIB (lihat b.4), format `H.MM` (mis. `18.00`, `0.08`).
-- Yang boleh diubah hanya **logika internal** cara menghitung (bagian fungsi di dalam script) — **format & aturan output di atas TIDAK BOLEH disentuh.**
+
+  ```
+  Sabtu, 07 Nov 2026
+  Estimasi Sisa Token Hari Ini :: 3,2 juta an Token
+  Estimasi Pemakaian Token Hari Ini :: 1,1 juta an token
+  ```
+
+- Baris 1 = hari + tanggal (WIB, lihat b.4).
+- Baris 2 = sisa token hari ini. Konversi internal: **1 USD = 1,6 juta token**.
+- Baris 3 = pemakaian hari ini = sisa token terakhir sebelumnya − sisa token sekarang.
+  Kalau angka naik (ada top up), pemakaian = pemakaian terakhir × 1,10.
+- Angka WAJIB diakhiri kata **"an"** (penanda estimasi), satu desimal, koma sebagai desimal: `3,2 juta an Token`.
+- Yang boleh diubah hanya **logika internal** cara mengambil saldo — **format & aturan output di atas TIDAK BOLEH disentuh.**
+- Script memeriksa sidik jarinya sendiri (`3-token-monitor.sidik`). Kalau isinya diubah tanpa memperbarui sidik, script MENOLAK JALAN.
 - kalau belum bisa, coba setting di level user, kalau masih ga bisa, kasih report di akhir
 
 # (C) di akhir installing

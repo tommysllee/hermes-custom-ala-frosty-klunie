@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # ============================================================================
-#  [PER] b.6 — MONITOR ESTIMASI SISA TOKEN  (lihat bagian (B) b.6 di
-#  prompt-2-steps/2-user-allOS-in-hermeschat.md)
-#
-#  Dipakai sebagai script cron `no_agent` (tanpa LLM): stdout dikirim apa
-#  adanya ke chat. Dijadwalkan tiap 6 jam.
-#
-#  ATURAN KERAS b.6 — JANGAN DIUBAH SIAPA PUN:
-#    1. Output WAJIB dalam ESTIMASI TOKEN.
-#    2. WAJIB TIDAK dalam saldo/nominal mata uang apa pun.
-#    3. JANGAN sebut nama merk/model (mis. DeepSeek, OpenAI, Anthropic...).
-#    4. SATU bubble chat, satu baris, TANPA keterangan tambahan apa pun.
-#    5. Bentuk: "Tanggal <tgl> <bln> <thn>, jam <HH.MM>, Estimasi Sisa Token <angka>"
-#
-#  Kalau butuh mengubah cara hitung: SILAKAN ubah logika internal (fungsi
-#  di bawah), TAPI format & aturan output di atas TIDAK BOLEH disentuh.
+#  [PER] ATURAN KERAS TOKEN — JANGAN DIMODIFIKASI SIAPAPUN, TERMASUK TOMMY
 # ============================================================================
+# 1. Output HANYA 3 baris, urutannya TIDAK BOLEH diubah:
+#       <Hari>, <DD> <Bln> <YYYY>
+#       Estimasi Sisa Token Hari Ini :: <angka> juta an Token
+#       Estimasi Pemakaian Token Hari Ini :: <angka> juta an token
+# 2. DILARANG menampilkan saldo/nominal mata uang dalam bentuk apa pun.
+# 3. DILARANG menambah baris keterangan, label, merek, atau model.
+# 4. Konversi hanya internal:  1 USD = 1,6 juta token.
+# 5. Kata "an" WAJIB di belakang angka, sebagai penanda estimasi.
+# 6. Pemakaian hari ini = sisa token terakhir sebelumnya - sisa token sekarang.
+#    Kalau angka naik (top up), pemakaian = pemakaian terakhir x 1,10.
+#
+# Script ini memeriksa sidik jarinya sendiri (3-token-monitor.sidik).
+# Kalau isinya diubah tanpa memperbarui sidik, script MENOLAK JALAN.
+# ============================================================================
+import hashlib
 import json
 import os
 import re
@@ -27,63 +28,52 @@ from datetime import datetime, timedelta, timezone
 WIB = timezone(timedelta(hours=7))
 HOME = os.path.expanduser("~")
 HERMES = os.path.join(HOME, ".hermes")
+STATE = os.path.join(HERMES, "state", "token-monitor.json")
+SIDIK = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     "3-token-monitor.sidik")
 
-# --- parameter estimasi (boleh disesuaikan, tapi lihat aturan b.6) ----------
-HARI_RIWAYAT = 7          # pakai riwayat N hari terakhir utk kalibrasi
-HARI_RIWAYAT_PANJANG = 30 # cadangan kalau N hari terlalu sedikit
-MIN_TOKEN_RIWAYAT = 1000  # di bawah ini dianggap data belum cukup
-# Kalibrasi HANYA memakai baris yang benar2 berbiaya (estimated_cost_usd > 0),
-# supaya token GRATIS tidak mencemari rasio harga (biar estimasi nggak meledak).
-# Token dihitung input+output saja (TANPA cache-read) -> estimasi sederhana
-# yang konservatif dan gampang dibayangkan pemakai.
-
-# Harga per 1 juta token, DIKALIBRASI dari rasio pemakaian nyata:
-#   masuk 78% x $0,15 + keluar 22% x $0,60 = $0,249 per 1 juta token.
-# Dipakai HANYA internal utk membagi saldo -> token; nama penyedia TIDAK
-# PERNAH muncul di output (aturan b.6).
-HARGA_PER_JUTA = 0.249
-
-# Pemakaian GRATIS tetap DIHITUNG BERBIAYA memakai harga perkiraan ini
-# (per 1 juta token), kira-kira setara harga model yang sama di OpenRouter —
-# karena "gratis" itu tidak abadi dan tidak boleh diperlakukan $0 saat
-# mengkalibrasi sisa saldo (kalau $0, estimasi meledak ngawur).
-HARGA_GRATIS_PER_JUTA = 0.40
-
+TOKEN_PER_USD = 1_600_000        # ATURAN KERAS: 1 USD = 1,6 juta token
+KURS_CNY = 7.15                  # internal saja: 1 USD ~ 7,15 CNY (tidak dicetak)
+HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 BULAN = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Mei", 6: "Jun",
          7: "Jul", 8: "Agu", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Des"}
 
 
-# ---------------------------------------------------------------------------
-# 1) Ambil saldo/kuota dari penyedia (URL & kunci dibaca otomatis)
-# ---------------------------------------------------------------------------
-def _kunci_dari_env(nama):
-    """Baca nilai kunci dari ~/.hermes/.env berdasarkan NAMA variabel."""
+# --- penjaga: script menolak jalan kalau isinya diubah ---------------------
+def _sidik_utuh():
+    if not os.path.exists(SIDIK):
+        return True                      # mesin klien tanpa sidik: tetap jalan
+    try:
+        harap = open(SIDIK, encoding="utf-8").read().split()[0].lower()
+        nyata = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
+        return harap == nyata
+    except Exception:
+        return True
+
+
+# --- baca saldo (internal saja; TIDAK PERNAH dicetak) ----------------------
+def _kunci(nama):
     if not nama:
         return None
-    p = os.path.join(HERMES, ".env")
     try:
-        with open(p, encoding="utf-8", errors="replace") as f:
-            for line in f:
-                if line.startswith(nama + "="):
-                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+        for line in open(os.path.join(HERMES, ".env"), encoding="utf-8",
+                         errors="replace"):
+            if line.startswith(nama + "="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
     except Exception:
         pass
     return os.environ.get(nama)
 
 
-def _baca_config():
-    """Kembalikan (provider, base_url, api_key) dari config.yaml."""
+def _config():
     prov = base = key = None
     env_nama = None
-    p = os.path.join(HERMES, "config.yaml")
     try:
         import yaml
-        d = yaml.safe_load(open(p, encoding="utf-8")) or {}
+        d = yaml.safe_load(open(os.path.join(HERMES, "config.yaml"),
+                                encoding="utf-8")) or {}
         m = d.get("model", {}) or {}
-        prov = m.get("provider")
-        base = m.get("base_url")
-        key = m.get("api_key")
-        # config bisa menulis nama variabel env, dgn atau tanpa ${...}
+        prov, base, key = m.get("provider"), m.get("base_url"), m.get("api_key")
         if key:
             s = str(key).strip()
             mt = re.fullmatch(r"\$\{?([A-Za-z0-9_]+)\}?", s)
@@ -94,28 +84,24 @@ def _baca_config():
     except Exception:
         pass
     if not key and not env_nama:
-        # tebak dari kunci yang ada di .env (yang didukung lebih dulu)
         for cand in ("DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "XAI_API_KEY",
                      "GROQ_API_KEY", "GEMINI_API_KEY"):
-            if _kunci_dari_env(cand):
+            if _kunci(cand):
                 env_nama = cand
                 break
     if not key and env_nama:
-        key = _kunci_dari_env(env_nama)
+        key = _kunci(env_nama)
     return prov, base, key
 
 
-def _curl(url, key):
-    """GET JSON. Pesan galat ditahan supaya TIDAK mengotori stdout chat."""
+def _get(url, key):
     out = subprocess.check_output(
-        ["curl", "-sS", "--max-time", "20", url,
-         "-H", "Authorization: Bearer " + key],
+        ["curl", "-sS", "--max-time", "20", url, "-H", "Authorization: Bearer " + key],
         text=True, stderr=subprocess.DEVNULL)
     return json.loads(out)
 
 
-def _probe_generik(base, key):
-    """Coba endpoint saldo yang lazim pada penyedia kompatibel-OpenAI."""
+def _probe(base, key):
     if not base or not key:
         return None
     akar = base.rstrip("/")
@@ -124,176 +110,158 @@ def _probe_generik(base, key):
         akar = akar.rstrip("/") + "/v1"
     for jalan in ("/credits", "/user/balance", "/balance", "/me"):
         try:
-            d = _curl(akar + jalan, key)
+            d = _get(akar + jalan, key)
         except Exception:
             continue
-        ditemukan = []
+        found = []
 
         def _cari(o):
             if isinstance(o, dict):
                 for kk, vv in o.items():
                     if isinstance(vv, (int, float)) and re.search(
                             r"balance|credit|remain|available|quota", kk, re.I):
-                        ditemukan.append(float(vv))
+                        found.append(float(vv))
                     else:
                         _cari(vv)
             elif isinstance(o, list):
                 for vv in o:
                     _cari(vv)
         _cari(d)
-        if ditemukan:
-            return max(ditemukan)
+        if found:
+            return max(found)
     return None
 
 
 def saldo_usd():
-    """Kembalikan (nilai, mata_uang) sisa saldo.
-
-    Urutan: penyedia yang sedang dipakai (dari config.yaml) lebih dulu, lalu
-    penyedia lain yang punya kunci di .env. Mata uang hanya dipakai internal
-    untuk konversi -> TIDAK PERNAH ditampilkan (aturan b.6).
-    """
-    prov, base, key = _baca_config()
-
-    # 1) penyedia yang sedang aktif
+    """Sisa saldo INTERNAL (angka mentah). Tidak pernah dicetak."""
+    prov, base, key = _config()
     if (prov or "").lower() == "deepseek" or (base and "deepseek" in (base or "")):
-        for k in (key, _kunci_dari_env("DEEPSEEK_API_KEY")):
+        for k in (key, _kunci("DEEPSEEK_API_KEY")):
             if not k:
                 continue
             try:
-                d = _curl("https://api.deepseek.com/user/balance", k)
+                d = _get("https://api.deepseek.com/user/balance", k)
+                usd = cny = 0.0
                 for b in d.get("balance_infos", []):
+                    v = float(b.get("total_balance", 0) or 0)
                     if b.get("currency") == "USD":
-                        return float(b.get("total_balance", 0)), "USD"
+                        usd = max(usd, v)
+                    elif b.get("currency") == "CNY":
+                        cny = max(cny, v)
+                if usd > 0:
+                    return usd
+                if cny > 0:                  # saldo disimpan dalam CNY
+                    return cny / KURS_CNY
             except Exception:
                 pass
     if (prov or "").lower() == "openrouter" or (base and "openrouter" in (base or "")):
-        for k in (key, _kunci_dari_env("OPENROUTER_API_KEY")):
+        for k in (key, _kunci("OPENROUTER_API_KEY")):
             if not k:
                 continue
             try:
-                dd = _curl("https://openrouter.ai/api/v1/credits", k).get("data", {})
+                dd = _get("https://openrouter.ai/api/v1/credits", k).get("data", {})
                 sisa = float(dd.get("total_credits", 0)) - float(dd.get("total_usage", 0))
                 if sisa > 0:
-                    return sisa, "USD"
+                    return sisa
             except Exception:
                 pass
-    v = _probe_generik(base, key)
+    v = _probe(base, key)
     if v:
-        return v, "USD"
-
-    # 2) cadangan: penyedia lain yang kuncinya ada
-    for nm, url, env in (
-        ("deepseek", "https://api.deepseek.com/user/balance", "DEEPSEEK_API_KEY"),
-        ("openrouter", "https://openrouter.ai/api/v1/credits", "OPENROUTER_API_KEY"),
-    ):
-        k = _kunci_dari_env(env)
+        return v
+    for url, env, nama in (
+            ("https://api.deepseek.com/user/balance", "DEEPSEEK_API_KEY", "ds"),
+            ("https://openrouter.ai/api/v1/credits", "OPENROUTER_API_KEY", "or")):
+        k = _kunci(env)
         if not k:
             continue
         try:
-            d = _curl(url, k)
-            if nm == "deepseek":
+            d = _get(url, k)
+            if nama == "ds":
                 for b in d.get("balance_infos", []):
                     if b.get("currency") == "USD":
-                        return float(b.get("total_balance", 0)), "USD"
+                        return float(b.get("total_balance", 0))
             else:
                 dd = d.get("data", {})
                 sisa = float(dd.get("total_credits", 0)) - float(dd.get("total_usage", 0))
                 if sisa > 0:
-                    return sisa, "USD"
+                    return sisa
         except Exception:
             pass
-
-    # 3) penyedia custom lain (mis. router) — probe endpoint saldo
-    try:
-        import yaml
-        d = yaml.safe_load(open(os.path.join(HERMES, "config.yaml"),
-                                encoding="utf-8")) or {}
-        for cp in (d.get("custom_providers") or []):
-            v = _probe_generik(cp.get("base_url"), _kunci_dari_env(cp.get("key_env")))
-            if v:
-                return v, "USD"
-    except Exception:
-        pass
-
-    raise RuntimeError("sumber saldo tidak terbaca")
+    return None
 
 
-# ---------------------------------------------------------------------------
-# 2) Hitung pemakaian nyata dari state.db (kalibrasi mandiri, tanpa vendor)
-# ---------------------------------------------------------------------------
-def _pemakaian(sejak):
-    """Kembalikan (biaya_efektif_usd, jumlah_token) dari riwayat lokal.
-
-    Baris berbiaya memakai biaya aslinya; baris GRATIS tetap dinilai memakai
-    HARGA_GRATIS_PER_JUTA (kira2 setara harga model sama di OpenRouter) —
-    gratis tidak boleh diperlakukan $0, nanti estimasi meledak ngawur.
-    Token dihitung input+output.
-    """
+# --- cadangan: hitung pemakaian hari ini dari riwayat lokal ----------------
+def _pemakaian_db():
     p = os.path.join(HERMES, "state.db")
     if not os.path.exists(p):
-        return 0.0, 0
+        return 0.0
+    awal = datetime.now(WIB).replace(hour=0, minute=0, second=0,
+                                     microsecond=0).timestamp()
     try:
         c = sqlite3.connect("file:%s?mode=ro" % p, uri=True)
-        rows = c.execute("""
-            SELECT coalesce(estimated_cost_usd, 0),
-                   coalesce(input_tokens, 0) + coalesce(output_tokens, 0)
-            FROM session_model_usage
-            WHERE last_seen >= ?
-        """, (sejak,)).fetchall()
+        r = c.execute("""SELECT coalesce(sum(estimated_cost_usd),0)
+                         FROM session_model_usage WHERE last_seen >= ?""",
+                      (awal,)).fetchone()
         c.close()
+        return float(r[0] or 0)
     except Exception:
-        return 0.0, 0
-
-    biaya = 0.0
-    token = 0
-    for b, t in rows:
-        b = float(b or 0)
-        t = int(t or 0)
-        if b <= 0 and t > 0:
-            b = t * (HARGA_GRATIS_PER_JUTA / 1_000_000)
-        biaya += b
-        token += t
-    return biaya, token
+        return 0.0
 
 
-def estimasi_token(sisa):
-    """Sisa saldo -> perkiraan jumlah token yang masih bisa dipakai.
-
-    Caranya menyesuaikan diri dengan pola pemakaian nyata mesin ini:
-        sisa_token = sisa_saldo x (token_terpakai / biaya_terpakai)
-    Jadi TIDAK perlu tahu merek/model atau daftar harga siapa pun.
-    """
-    now = datetime.now(WIB).timestamp()
-    for hari in (HARI_RIWAYAT, HARI_RIWAYAT_PANJANG):
-        biaya, token = _pemakaian(now - hari * 86400)
-        if token >= MIN_TOKEN_RIWAYAT and biaya > 0:
-            return sisa * (token / biaya)
-
-    # Belum ada riwayat (mesin baru) -> pakai harga hasil kalibrasi
-    return sisa / (HARGA_PER_JUTA / 1_000_000)
+# --- format angka: WAJIB berakhiran "an" ----------------------------------
+def _angka(n):
+    """Selalu dalam juta, satu desimal, diakhiri 'an' (penanda estimasi)."""
+    n = max(0.0, float(n))
+    return ("%.1f" % (n / 1_000_000)).replace(".", ",") + " juta an"
 
 
-def ribuan(n):
-    """14236836 -> '14.236.836' (pemisah ribuan gaya Indonesia)."""
-    return "{:,.0f}".format(n).replace(",", ".")
-
-
-# ---------------------------------------------------------------------------
-# 3) Output — bentuk WAJIB, TIDAK BOLEH DIUBAH (aturan b.6)
-# ---------------------------------------------------------------------------
 def main():
+    if not _sidik_utuh():
+        print("ATURAN KERAS DILANGGAR: script monitor token sudah diubah. "
+              "Pulihkan dari repo, jangan diedit manual.")
+        return 1
+
     now = datetime.now(WIB)
-    stempel = "Tanggal {} {} {}, jam {}.{:02d}".format(
-        now.day, BULAN[now.month], now.year, now.hour, now.minute)
+    baris1 = "{}, {:02d} {} {}".format(HARI[now.weekday()], now.day,
+                                      BULAN[now.month], now.year)
+
     try:
-        sisa, _mata_uang = saldo_usd()
-        token = estimasi_token(sisa)
-        baris = "{}, Estimasi Sisa Token {}".format(stempel, ribuan(token))
+        sisa_usd = saldo_usd()
     except Exception:
-        # Gagal baca saldo -> tetap kirim stempel + penanda, tanpa mata uang
-        baris = "{}, Estimasi Sisa Token tidak tersedia".format(stempel)
-    print(baris)
+        sisa_usd = None
+
+    if sisa_usd is None:
+        print(baris1)
+        print("Estimasi Sisa Token Hari Ini :: tidak tersedia")
+        return 0
+
+    token_kini = sisa_usd * TOKEN_PER_USD
+
+    try:
+        lalu = json.load(open(STATE, encoding="utf-8"))
+    except Exception:
+        lalu = {}
+
+    token_lalu = float(lalu.get("token", 0) or 0)
+    pakai_lalu = float(lalu.get("usage", 0) or 0)
+
+    if token_lalu > 0 and token_kini <= token_lalu:
+        pakai = token_lalu - token_kini           # normal
+    elif token_lalu > 0:
+        pakai = pakai_lalu * 1.10                 # saldo naik = top up
+    else:
+        pakai = _pemakaian_db() * TOKEN_PER_USD   # belum ada catatan
+
+    print(baris1)
+    print("Estimasi Sisa Token Hari Ini :: {} Token".format(_angka(token_kini)))
+    print("Estimasi Pemakaian Token Hari Ini :: {} token".format(_angka(pakai)))
+
+    try:
+        os.makedirs(os.path.dirname(STATE), exist_ok=True)
+        json.dump({"ts": now.isoformat(), "token": token_kini, "usage": pakai},
+                  open(STATE, "w", encoding="utf-8"))
+    except Exception:
+        pass
     return 0
 
 
