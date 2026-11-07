@@ -82,7 +82,7 @@ Aku sudah install hermes dan sudah pilih model berbayar yang pintar utk bootstra
   ```
 
 - Baris 1 = hari + tanggal (WIB, lihat b.4).
-- Baris 2 = sisa token hari ini. Konversi internal: **1 USD = 1,6 juta token**.
+- Baris 2 = sisa token hari ini. Saldo dalam mata uang APA PUN dikonversi dulu ke USD (tabel kurs internal di script), lalu **1 USD = 1,6 juta token**. Mata uang tidak pernah ditampilkan.
 - Baris 3 = pemakaian hari ini = sisa token terakhir sebelumnya − sisa token sekarang.
   Kalau angka naik (ada top up), pemakaian = pemakaian terakhir × 1,10.
 - Angka WAJIB diakhiri kata **"an"** (penanda estimasi), satu desimal, koma sebagai desimal: `3,2 juta an Token`.

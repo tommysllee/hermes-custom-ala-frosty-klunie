@@ -9,6 +9,8 @@
 # 2. DILARANG menampilkan saldo/nominal mata uang dalam bentuk apa pun.
 # 3. DILARANG menambah baris keterangan, label, merek, atau model.
 # 4. Konversi hanya internal:  1 USD = 1,6 juta token.
+#    Saldo dalam mata uang APA PUN dikonversi dulu ke USD (tabel KURS_KE_USD),
+#    baru dijadikan estimasi token. Mata uang tidak pernah dicetak.
 # 5. Kata "an" WAJIB di belakang angka, sebagai penanda estimasi.
 # 6. Pemakaian hari ini = sisa token terakhir sebelumnya - sisa token sekarang.
 #    Kalau angka naik (top up), pemakaian = pemakaian terakhir x 1,10.
@@ -33,7 +35,24 @@ SIDIK = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "3-token-monitor.sidik")
 
 TOKEN_PER_USD = 1_600_000        # ATURAN KERAS: 1 USD = 1,6 juta token
-KURS_CNY = 7.15                  # internal saja: 1 USD ~ 7,15 CNY (tidak dicetak)
+# Kurs internal (1 USD = sekian unit mata uang). Dipakai HANYA untuk mengubah
+# saldo mata uang apa pun menjadi USD sebelum jadi estimasi token.
+# Tidak pernah dicetak. Perbarui angkanya kalau kurs bergerak jauh.
+KURS_KE_USD = {
+    "USD": 1.0,      "CNY": 7.15,    "IDR": 15800.0, "EUR": 0.92,
+    "GBP": 0.78,     "JPY": 150.0,   "SGD": 1.34,    "INR": 83.0,
+    "AUD": 1.50,     "CAD": 1.36,    "HKD": 7.80,    "TWD": 32.0,
+    "KRW": 1330.0,   "MYR": 4.70,    "THB": 36.0,    "PHP": 57.0,
+    "VND": 25400.0,  "BRL": 5.00,    "RUB": 90.0,
+}
+
+
+def _ke_usd(jumlah, mata_uang):
+    """Ubah saldo mata uang apa pun -> USD. Mata uang tak dikenal = diabaikan."""
+    kurs = KURS_KE_USD.get((mata_uang or "").upper())
+    if not kurs or kurs <= 0:
+        return None
+    return float(jumlah) / kurs
 HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 BULAN = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Mei", 6: "Jun",
          7: "Jul", 8: "Agu", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Des"}
@@ -141,17 +160,16 @@ def saldo_usd():
                 continue
             try:
                 d = _get("https://api.deepseek.com/user/balance", k)
-                usd = cny = 0.0
+                terbaik = None
                 for b in d.get("balance_infos", []):
                     v = float(b.get("total_balance", 0) or 0)
-                    if b.get("currency") == "USD":
-                        usd = max(usd, v)
-                    elif b.get("currency") == "CNY":
-                        cny = max(cny, v)
-                if usd > 0:
-                    return usd
-                if cny > 0:                  # saldo disimpan dalam CNY
-                    return cny / KURS_CNY
+                    if v <= 0:
+                        continue
+                    usd = _ke_usd(v, b.get("currency"))
+                    if usd is not None and (terbaik is None or usd > terbaik):
+                        terbaik = usd
+                if terbaik is not None:
+                    return terbaik
             except Exception:
                 pass
     if (prov or "").lower() == "openrouter" or (base and "openrouter" in (base or "")):
