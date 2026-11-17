@@ -1,5 +1,30 @@
 # Business AI Agent — Automatic Installer
 
+> **Terakhir update:** Selasa, 17 November 2026 · 23:25 WIB
+
+## ⭐ MULAI DARI SINI
+
+**Jalur yang disarankan:** [`prompt-2-steps/structured-setup/`](prompt-2-steps/structured-setup/README.md)
+
+Urutan berlangkah, dengan pemeriksaan di tiap tahap. Kalau ada yang gagal, jelas
+langkah mana yang harus diulang — tidak perlu mulai dari nol.
+
+```
+a  a-langkah-0-persiapan.md   checklist sebelum apa pun (gmail, Ubuntu, WIB, perangkat)
+1  1-deep-*.{sh,ps1}          akses masuk: SSH + user tslconsulting + Tailscale + Docker
+2  2-allin-linubu.sh  /  .md  alat dasar: noVNC, SearXNG, camofox, STT, autoclean, token
+d  d-ganti-model-*.md         ganti model + autocategorize + WhatsApp + Google + GitHub
+e  e-tawaran-hemat.md         pengingat dua penawaran (opsional)
+```
+
+> **"One-liner dari awal sampai akhir" TIDAK disarankan.** Tiap mesin beda izin,
+> beda OS, beda jaringan. Satu kegagalan di tengah = ulang dari awal.
+> Bagian di bawah tetap tersedia untuk yang sudah paham risikonya.
+
+---
+
+## Jalur cepat (pemakai berpengalaman saja)
+
 **One command. Automatic. Ready to use for business.**
 
 This installer sets up a complete AI assistant: WhatsApp, Google Sheets,
@@ -7,8 +32,6 @@ automatic backup, and remote access — all installed and
 starting on their own when the computer is turned on.
 
 ---
-
-## EASIEST WAY — one command, no clone
 
 Paste this **one line** into the terminal, press Enter, done.
 No Git knowledge needed. Nothing to download.
