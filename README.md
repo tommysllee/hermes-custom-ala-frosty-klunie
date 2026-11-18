@@ -1,6 +1,6 @@
 # Business AI Agent — Automatic Installer
 
-> **Terakhir update:** Selasa, 17 November 2026 · 23:25 WIB
+> **Terakhir update:** Kamis, 12 November 2026 · 05:00 WIB
 
 ## ⭐ MULAI DARI SINI
 
@@ -10,11 +10,11 @@ Urutan berlangkah, dengan pemeriksaan di tiap tahap. Kalau ada yang gagal, jelas
 langkah mana yang harus diulang — tidak perlu mulai dari nol.
 
 ```
-a  a-langkah-0-persiapan.md   checklist sebelum apa pun (gmail, Ubuntu, WIB, perangkat)
+0  0-prepare.md               checklist sebelum apa pun (email, OS, Hermes, WIB, perangkat)
 1  1-deep-*.{sh,ps1}          akses masuk: SSH + user tslconsulting + Tailscale + Docker
 2  2-allin-linubu.sh  /  .md  alat dasar: noVNC, SearXNG, camofox, STT, autoclean, token
-d  d-ganti-model-*.md         ganti model + autocategorize + WhatsApp + Google + GitHub
-e  e-tawaran-hemat.md         pengingat dua penawaran (opsional)
+3  3-switch-focused-deepseek.md  ganti model + autocategorize + WhatsApp + Google + GitHub
+4  4-mandatory-offer.md       dua tawaran (opsional)
 ```
 
 > **"One-liner dari awal sampai akhir" TIDAK disarankan.** Tiap mesin beda izin,

@@ -66,19 +66,45 @@ Rufus (Windows) atau balenaEtcher  →  untuk membuat USB bootable
 
 ## C. Pasang Hermes blank slate
 
-Setelah Ubuntu hidup dan login, jalankan **di terminal Ubuntu** (bukan lewat SSH):
+Pilih **satu** sesuai OS mesin yang dipakai. Jangan pasang dua kali.
+
+### C.1 Linux / Ubuntu Server
+
+Jalankan **di terminal Ubuntu** (bukan lewat SSH):
 
 ```bash
-# 1. pastikan jam benar DULU — sebelum apa pun
-sudo timedatectl set-timezone Asia/Jakarta
-timedatectl
-
-# 2. pasang Hermes (blank slate, tanpa model)
-curl -fsSL https://nousportal.example/hermes/install.sh | bash
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 ```
 
-> Ganti URL di atas dengan skrip pemasangan resmi dari Nous Portal yang berlaku
-> saat pemasangan dilakukan. **Selalu cek dulu isi skripnya** sebelum dijalankan
+### C.2 macOS
+
+Buka **Terminal** (jangan pakai `sudo`), lalu:
+
+```bash
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+```
+
+### C.3 Windows 10 / 11 — native, tanpa WSL
+
+Buka **PowerShell** atau Windows Terminal (tidak perlu admin), lalu:
+
+```powershell
+iex (irm https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1)
+```
+
+Pemasang menaruh Hermes di `%LOCALAPPDATA%\hermes`, menambahkan `hermes` ke
+PATH pengguna, dan **terminal harus ditutup lalu dibuka lagi** agar perintah
+`hermes` dikenali.
+
+> **Untuk ketiga OS:** selalu benar kan jam lebih dulu. Di Ubuntu/macOS:
+> `sudo timedatectl set-timezone Asia/Jakarta` (Linux) atau
+> System Settings → General → Date & Time (macOS). Di Windows:
+> Settings → Time & language → Date & time → **Time zone: (UTC+07:00) Jakarta**.
+> Kalau zona waktu salah, semua jadwal cron akan meleset 7 jam.
+
+> Kalau tautan di atas berubah, ambil yang berlaku dari
+> https://hermes-agent.nousresearch.com/docs/getting-started/installation
+> dan **cek dulu isi skripnya** sebelum dijalankan
 > (`curl -fsSL <url> -o /tmp/x.sh && less /tmp/x.sh`).
 
 ### Pilih model saat pertama dijalankan
@@ -91,16 +117,22 @@ Cara memilih       : jalankan `hermes` lalu ikuti pemilih model,
 
 StepFun gratis dipakai untuk **langkah awal saja**, supaya bisa masuk ke chat dan
 menyelesaikan langkah berikutnya tanpa biaya. Nanti bisa diganti ke model berbayar
-(lihat `d-ganti-model-fokus-deepseek.md`).
+(lihat `3-switch-focused-deepseek.md`).
 
 ### Verifikasi sebelum lanjut
 
 ```bash
 hermes --version          # harus keluar nomor versi, bukan "command not found"
-timedatectl               # Time zone harus: Asia/Jakarta (WIB, +0700)
+timedatectl               # Linux: Time zone harus Asia/Jakarta (WIB, +0700)
 ```
 
-Kalau dua perintah ini belum benar, **jangan lanjut ke Langkah 1**.
+```powershell
+# Windows
+hermes --version
+Get-TimeZone | Select-Object Id      # harus: SE Asia Standard Time (WIB)
+```
+
+Kalau dua pemeriksaan ini belum benar, **jangan lanjut ke Langkah 1**.
 
 ---
 
@@ -178,6 +210,6 @@ Langkah 1  →  1-deep-linubu-terminal.sh     (Linux/Ubuntu, superuser)
 Langkah 2  →  2-allin-linubu.sh              (Linux/Ubuntu)
               2-user-allOS-in-hermeschat.md  (Windows/Mac, lewat chat Hermes)
 
-Langkah 3  →  d-ganti-model-fokus-deepseek.md
-Langkah 4  →  e-tawaran-hemat.md
+Langkah 3  →  3-switch-focused-deepseek.md
+Langkah 4  →  4-mandatory-offer.md
 ```
