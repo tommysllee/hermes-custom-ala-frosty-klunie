@@ -26,8 +26,11 @@ LOG="$HOME/.hermes/logs/2a-tools.log"
 mkdir -p "$(dirname "$LOG")"
 exec > >(tee -a "$LOG") 2>&1
 
+CATATAN_GAGAL="${CATATAN_GAGAL:-/tmp/hermes-2a-gagal.txt}"
+: > "$CATATAN_GAGAL"
 ok()   { printf '  ✓ %s\n' "$*"; }
-warn() { printf '  ! %s\n' "$*"; }
+warn() { printf '  ! %s\n' "$*"; printf '%s\n' "$*" >> "$CATATAN_GAGAL"; }
+info() { printf '  · %s\n' "$*"; }
 fail() { printf '  ✗ %s\n' "$*"; }
 step() { printf '\n── %s\n' "$*"; }
 
@@ -136,7 +139,7 @@ YAML
     restart: unless-stopped
     command: redis-server --appendonly yes
   evolution-api:
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.3.7
     container_name: wuku-evolution
     restart: unless-stopped
     depends_on:
@@ -242,10 +245,17 @@ fi
 step "7/7 Computer use + image analysis"
 "$HERMES_BIN" tools enable computer_use >/dev/null 2>&1 && ok "toolset computer_use aktif" || warn "gagal enable computer_use"
 "$HERMES_BIN" tools post-setup cua_driver >/dev/null 2>&1 && ok "cua-driver siap" || warn "cua_driver post-setup gagal (bisa manual)"
-warn "image analysis: Hermes otomatis memilih model vision — tidak perlu di-set"
+info "image analysis: Hermes otomatis memilih model vision — tidak perlu di-set"
 
 echo
 echo "══ SELESAI 2a ══"
+GAGAL_N=$(wc -l < "$CATATAN_GAGAL" 2>/dev/null || echo 0)
+if [ "${GAGAL_N:-0}" -gt 0 ]; then
+  echo "  Peringatan ($GAGAL_N) — periksa satu per satu:"
+  sed 's/^/    ! /' "$CATATAN_GAGAL"
+else
+  echo "  Tidak ada peringatan."
+fi
 echo "  Verifikasi cepat:"
 echo "    docker ps --format '{{.Names}}\t{{.Status}}' | grep wuku"
 echo "    curl -s 'http://127.0.0.1:8080/search?q=test&format=json' | head -c 80"

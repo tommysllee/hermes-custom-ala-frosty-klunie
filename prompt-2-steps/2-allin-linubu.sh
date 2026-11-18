@@ -118,11 +118,24 @@ printf '  cron        : %s entri maintenance\n' "$(crontab -l 2>/dev/null | grep
 printf '  token cron  : %s job\n' "$(hermes cron list 2>/dev/null | grep -ci 'token')"
 printf '  remote view : bash ~/.hermes/remote-view/remote-view.sh start\n'
 
-if [ -n "$FAILED" ]; then
+if [ -f /tmp/hermes-2a-gagal.txt ] && [ -s /tmp/hermes-2a-gagal.txt ]; then
   echo
+  warn "KOMPONEN 2a YANG BELUM BERES ($(wc -l < /tmp/hermes-2a-gagal.txt)):"
+  sed 's/^/    ! /' /tmp/hermes-2a-gagal.txt
+  echo "  Ini TIDAK menghentikan tahap 2b–2e, tapi harus dibereskan manual."
+fi
+
+echo
+if [ -n "$FAILED" ]; then
   warn "TAHAP DENGAN ERROR:$FAILED"
   echo "  Cek log: ls -t ~/.hermes/logs/*.log | head"
   exit 1
+fi
+
+if [ -f /tmp/hermes-2a-gagal.txt ] && [ -s /tmp/hermes-2a-gagal.txt ]; then
+  echo
+  warn "SELESAI DENGAN CATATAN — lihat daftar di atas"
+  exit 0
 fi
 
 echo
