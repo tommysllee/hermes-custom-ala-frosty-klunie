@@ -66,4 +66,7 @@ fi
 
 echo
 echo "══ SELESAI 2e ══"
-echo "  Format yang benar: 'Tanggal 9 Okt 2026, jam 18.00, Estimasi Sisa Token 14.236.836'"
+echo "  Format wajib (3 baris, tanpa nominal uang, tanpa keterangan):"
+echo "    Rabu, 9 Okt 2026"
+echo "    Estimasi Sisa Token Hari Ini :: 3,2 juta an Token"
+echo "    Estimasi Pemakaian Token Hari Ini :: 1,4 juta an token"
