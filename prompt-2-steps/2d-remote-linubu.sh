@@ -2,7 +2,7 @@
 # ============================================================================
 # 2d-remote-linubu.sh — TIMEZONE WIB + SSH + VNC(noVNC) + TAILSCALE AUTO
 # ============================================================================
-# Bagian (B) b.4 + b.5 dari 2-user-allOS-in-hermeschat.md:
+# Bagian (B) b.4 + b.5 dari 2-user-allOS-in-hermeschat.md (arsip, sudah dihapus):
 #   - server ngomong dalam WIB (sistem di-set Asia/Jakarta)
 #   - SSH hidup
 #   - VNC/noVNC siap untuk login web manual (Google, marketplace, dsb)

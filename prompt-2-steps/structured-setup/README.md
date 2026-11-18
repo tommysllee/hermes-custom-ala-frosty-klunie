@@ -26,8 +26,9 @@ pemeriksaan sendiri, jadi kalau ada yang gagal, jelas langkah mana.
   (1) 1-deep-*.{sh,ps1}
       └── akses masuk: SSH + user tslconsulting + Tailscale + Docker + gateway
               ↓
-  (2) 2-allin-linubu.sh  /  2-user-allOS-in-hermeschat.md
+  (2) 2a-tools → 2b-autostart → 2c-maintenance → 2d-remote → 2e-token-monitor
       └── alat dasar: noVNC, SearXNG, camofox, STT, autoclean, monitor token
+          (Linux/Ubuntu. Windows/macOS: lihat catatan di bawah)
               ↓
   (3) 3-switch-focused-deepseek.md
       └── ganti ke model berbayar + autocategorize + WhatsApp + Google + GitHub
@@ -46,8 +47,8 @@ pemeriksaan sendiri, jadi kalau ada yang gagal, jelas langkah mana.
 | `1-deep-linubu-terminal.sh` | Ubuntu/Debian | terminal, superuser | SSH, user `tslconsulting`, Tailscale, Docker, gateway system-level |
 | `1-deep-win-powershell.ps1` | Windows | PowerShell, **admin** | hal sama, versi Windows |
 | `1-deep-mac-spotlightterminal.sh` | macOS | Terminal, sudo | hal sama, versi macOS |
-| `2-allin-linubu.sh` | Ubuntu/Debian | terminal | alat dasar + autostart + maintenance + monitor token |
-| `2-user-allOS-in-hermeschat.md` | Windows/Mac | **chat Hermes** | hal sama, dikerjakan lewat chat |
+| `2-allin-linubu.sh` | Ubuntu/Debian | terminal | menjalankan 2a–2e berurutan |
+| `2a` … `2e` | Ubuntu/Debian | terminal | tiap tahap bisa dijalankan sendiri |
 | `3-switch-focused-deepseek.md` | semua | chat Hermes | ganti model + autocategorize + koneksi |
 | `4-mandatory-offer.md` | semua | chat Hermes | dua tawaran (opsional) |
 
@@ -86,20 +87,19 @@ irm https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie
 curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/structured-setup/2-allin-linubu.sh -o /tmp/2-allin.sh && bash /tmp/2-allin.sh
 ```
 
-### Langkah 2 — Windows / macOS (lewat chat Hermes)
+### Langkah 2 — Windows / macOS
 
-Langkah 2 untuk Windows/Mac berbentuk **naskah**, bukan skrip. Ambil isinya,
-lalu tempel ke chat Hermes:
+Langkah 2 berbentuk **skrip bash untuk Ubuntu/Debian**; belum ada versi Windows
+atau macOS. Yang bisa dilakukan:
 
-```powershell
-# Windows
-irm https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/structured-setup/2-user-allOS-in-hermeschat.md -OutFile "$env:TEMP\2-user.md"; notepad "$env:TEMP\2-user.md"
+```
+macOS        → jalankan Langkah 2 di mesin Ubuntu, atau lewati (banyak bagian
+               memang khusus Linux: apt, systemd, xvfb, x11vnc)
+Windows      → sama: pakai Ubuntu, atau WSL2 lalu ikuti jalur Linux
 ```
 
-```bash
-# macOS
-curl -fsSL https://raw.githubusercontent.com/tommysllee/hermes-custom-ala-frosty-klunie/main/prompt-2-steps/structured-setup/2-user-allOS-in-hermeschat.md -o /tmp/2-user.md && open -e /tmp/2-user.md
-```
+Langkah 2 hanya memasang alat pelengkap (noVNC, SearXNG, camofox, STT,
+autoclean, monitor token). Hermes sendiri sudah bisa dipakai tanpa bagian ini.
 
 ### Langkah 3 dan 4 (juga naskah)
 

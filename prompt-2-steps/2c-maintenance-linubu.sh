@@ -2,7 +2,7 @@
 # ============================================================================
 # 2c-maintenance-linubu.sh — AUTOCLEAN HARIAN + AUTOUPDATE APT + RESTART GATEWAY
 # ============================================================================
-# Bagian (B) b.3 dari 2-user-allOS-in-hermeschat.md:
+# Bagian (B) b.3 dari 2-user-allOS-in-hermeschat.md (arsip, sudah dihapus):
 #   - tiap akhir hari WIB: buang file sampah, lalu restart gateway
 #   - tiap ada update sistem/hermes: apt update + restart gateway
 #

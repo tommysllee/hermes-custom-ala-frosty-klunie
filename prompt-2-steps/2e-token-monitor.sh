@@ -2,7 +2,7 @@
 # ============================================================================
 # 2e-token-monitor.sh — PASANG MONITOR TOKEN TIAP 6 JAM (mode no_agent)
 # ============================================================================
-# Bagian (B) b.6 [PER] dari 2-user-allOS-in-hermeschat.md.
+# Bagian (B) b.6 [PER] dari 2-user-allOS-in-hermeschat.md (arsip, sudah dihapus).
 # Aturan output (TIDAK BOLEH DIUBAH): satu baris, hanya tanggal + jam + angka
 # token, tanpa label/merek/mata uang.
 #

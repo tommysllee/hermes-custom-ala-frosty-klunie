@@ -2,7 +2,7 @@
 # ============================================================================
 # 2b-autostart-linubu.sh — AUTOSTART SYSTEM-LEVEL + LINGER (tanpa login)
 # ============================================================================
-# Bagian (B) b.2 dari 2-user-allOS-in-hermeschat.md:
+# Bagian (B) b.2 dari 2-user-allOS-in-hermeschat.md (arsip, sudah dihapus):
 #   gateway start di SYSTEM level, linger aktif, jalan tanpa user login,
 #   dan setelah reboot/disconnect tidak minta password lagi.
 #

@@ -2,7 +2,7 @@
 
 Terakhir update: Rabu, 21 Okt 2026 · 11:20 WIB
 
-Prompt asli: `2-user-allOS-in-hermeschat.md`.
+Prompt asli: `2-user-allOS-in-hermeschat.md (arsip, sudah dihapus)`.
 Script di bawah menggantikan bagian-bagian yang **deterministik** (tidak butuh
 penalaran LLM). Bagian yang butuh percakapan/keputusan manusia tetap dikerjakan
 Hermes.

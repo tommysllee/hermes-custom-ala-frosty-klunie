@@ -2,7 +2,7 @@
 # ============================================================================
 # 2a-tools-linubu.sh — AUTOINSTALL ALAT DASAR + STACK DOCKER + SETTING MODEL ALAT
 # ============================================================================
-# Bagian (A) a.2 dari prompt-2-steps/2-user-allOS-in-hermeschat.md:
+# Bagian (A) a.2 dari prompt-2-steps/2-user-allOS-in-hermeschat.md (arsip, sudah dihapus):
 #   - alat dasar apt (git, ffmpeg, xvfb, novnc, rclone, postgres, redis, dll)
 #   - SearXNG + Evolution API di Docker
 #   - camofox (browser automation)

@@ -207,8 +207,8 @@ Langkah 1  →  1-deep-linubu-terminal.sh     (Linux/Ubuntu, superuser)
               1-deep-win-powershell.ps1      (Windows, admin)
               1-deep-mac-spotlightterminal.sh (Mac, sudo)
 
-Langkah 2  →  2-allin-linubu.sh              (Linux/Ubuntu)
-              2-user-allOS-in-hermeschat.md  (Windows/Mac, lewat chat Hermes)
+Langkah 2  →  2-allin-linubu.sh              (Linux/Ubuntu; jalankan 2a–2e)
+              Windows/macOS: belum ada jalur otomatis — lihat README
 
 Langkah 3  →  3-switch-focused-deepseek.md
 Langkah 4  →  4-mandatory-offer.md
