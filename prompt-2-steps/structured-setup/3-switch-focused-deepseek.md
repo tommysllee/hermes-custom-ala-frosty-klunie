@@ -41,7 +41,9 @@ Antes de eso, si todavía no existe, prepara el respaldo en GitHub:
 
 - Se respalda **TODO**, incluidos archivos y carpetas que aparezcan después.
 - **NO uses allowlist/whitelist.** Una lista blanca hace que lo nuevo quede fuera y el restore salga incompleto.
-- Blacklist solo si de verdad hace falta (caché, logs enormes, temporales), lo mínimo posible, y **cada exclusión anotada en el README** con el motivo.
+- **Blacklist está permitida, pero lo ideal es NO excluir NADA.** Cada exclusión es una cosa que no vuelve, y eso obliga a relogin, a volver a pegar API/token, o produce error.
+- Meta: state vuelve **100% sin relogin, sin retoken, sin re-API, y sin error**. Si para lograrlo hay que subir todo, sube todo.
+- Si de verdad hay que excluir algo (solo caché temporal que se regenera), anótalo en el README con el motivo, y verifica que su ausencia no rompe el arranque.
 - Razón: solo el técnico tiene acceso al GitHub y al servidor. Por eso todo puede ir dentro, **incluidos logins, tokens, API keys y sesiones nuevas**.
 
 ## 2.3 HASIL BACKUP (qué debe contener)
