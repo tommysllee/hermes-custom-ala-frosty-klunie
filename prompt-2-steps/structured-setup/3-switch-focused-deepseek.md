@@ -18,16 +18,13 @@ Reglas duras:
 - Antes de crear algo nuevo, revisa si ya existe algo parecido. Si existe, mejora eso.
 - Cada vez que guardes algo, dime en una línea dónde lo pusiste y por qué ahí.
 
-# 2. AUTOBACKUP
+# 2. AUTOBACKUP + RESTORE ONE-LINER
 
-Configura el respaldo automático de TODO el estado de Hermes:
+Objetivo: que un servidor Ubuntu recién instalado pueda volver EXACTAMENTE al último respaldo con un solo comando, sin que yo tenga que instalar Hermes, sin volver a iniciar sesión y sin volver a pegar tokens.
 
-- Skills, cron, templates, knowledge, scripts
-- Perfiles, configuraciones, accesos, sesiones, state.db
+Antes de eso, si todavía no existe, prepara el respaldo en GitHub:
 
-Antes de eso, si todavía no existe, crea el respaldo en GitHub:
-
-- Un repositorio **PRIVADO** (de preferencia llamado "Pull Issue Content", es el nombre que usan los scripts).
+- Un repositorio **PRIVADO** llamado "Pull Issue Content" (es el nombre que usan los scripts; si lo cambias, actualiza el script).
 - Un token de acceso personal (fine-grained PAT) con estos permisos exactos:
   - **Contents**: Read and write
   - **Issues**: Read and write
@@ -35,11 +32,55 @@ Antes de eso, si todavía no existe, crea el respaldo en GitHub:
 - Instálalo con: `hermes config set GITHUB_TOKEN <token>`
 - Verifica de verdad: intenta leer el repositorio con ese token. Si devuelve error de permisos, dime cuál permiso falta.
 
-Requisitos del respaldo:
-- Que sea **restaurable al 100%**: un comando y todo vuelve — sin volver a poner API keys, sin volver a iniciar sesión en nada, sin errores.
-- Que corra con un cron propio (dos veces al día es razonable), y que el respaldo anterior se conserve: el historial no se sobrescribe.
-- Que verifiques que el respaldo se puede RESTAURAR, no solo que se creó. Un respaldo que nunca se probó no es un respaldo.
-- Los tokens y contraseñas van fuera del repositorio y con permisos 600; nunca los pegues en un archivo que se sube.
+## 2.1 JADWAL
+
+- Backup automático con cron **2 veces al día**. No más seguido: cada hora solo llena el historial sin aportar nada.
+- El respaldo anterior NO se sobrescribe: el historial se conserva (commits, no un único archivo que se pisa).
+
+## 2.2 CAKUPAN (qué se respalda)
+
+- Se respalda **TODO**, incluidos archivos y carpetas que aparezcan después.
+- **NO uses allowlist/whitelist.** Una lista blanca hace que lo nuevo quede fuera y el restore salga incompleto.
+- Blacklist solo si de verdad hace falta (caché, logs enormes, temporales), lo mínimo posible, y **cada exclusión anotada en el README** con el motivo.
+- Razón: solo el técnico tiene acceso al GitHub y al servidor. Por eso todo puede ir dentro, **incluidos logins, tokens, API keys y sesiones nuevas**.
+
+## 2.3 HASIL BACKUP (qué debe contener)
+
+El contenido debe bastar para que el restore devuelva estado, configuración, ajustes, cron, skills, scripts y todo lo demás **exactamente como estaba al momento del backup**:
+
+- `~/.hermes/` completo (config, perfiles, skills, cron, scripts, knowledge, sesiones, `state.db`)
+- Credenciales y sesiones de herramientas externas (Google, browser profile, git credentials)
+- **Conserva permisos, owner y symlinks** (usa `tar` con `-p`, o `rsync -a`); no los normalices.
+
+## 2.4 README EN EL REPO
+
+El README debe contener:
+
+- Instrucciones de restore paso a paso.
+- El comando **ONE-LINER de restore listo para copiar y pegar**, que ya incluya el PAT para que no haya que autenticarse a mano.
+- Lista de exclusiones (si hay alguna) con su motivo.
+
+## 2.5 RESTORE (requisito duro)
+
+- En un Ubuntu Server vacío, yo **NO** instalo Hermes ni configuro nada.
+- Basta ejecutar el one-liner (git clone/pull) → todo vuelve al último backup y **funciona de inmediato**.
+- Condiciones: **SIN relogin, SIN volver a ingresar API/token, SIN ningún error**.
+- No me pidas nada más que el acceso a ese GitHub.
+
+## 2.6 UJI WAJIB (no se negocia)
+
+Después de armarlo, prueba el restore en un **HOME FALSO** (nunca sobre el HOME real):
+
+- Compara original vs restaurado: **checksum (sha256) y tamaño de cada archivo** deben coincidir.
+- Confirma que no hace falta relogin ni volver a pegar API/token.
+- Confirma que no aparece ningún error al arrancar.
+- Si algo no coincide, **corrige y repite** hasta que todo pase. No me entregues "casi listo".
+- Al terminar, dime el resultado con números: cuántos archivos comparados, cuántos coinciden, cuántos fallan.
+
+## 2.7 ENTREGA
+
+Dame en una línea: la hora del cron, el comando de restore, y el resultado de la prueba (archivos comparados / coinciden / fallan).
+
 
 # 3. REMOTE VIEW (con resolución alta y vertical)
 
