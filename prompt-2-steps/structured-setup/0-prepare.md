@@ -1,6 +1,6 @@
 # LANGKAH 0 — PERSIAPAN SEBELUM APA PUN
 
-> **Terakhir update:** Selasa, 17 November 2026 · 23:10 WIB
+> **Terakhir update:** Senin, 23 November 2026 · 08:55 WIB
 > **Siapa yang mengerjakan:** orang yang memasang (bukan AI). Ini semua di luar sistem.
 > **Jangan lewati satu pun.** Kalau langkah 0 belum beres, langkah 1 & 2 akan gagal
 > dengan error yang membingungkan.
@@ -18,18 +18,32 @@ terpasang**, dan **perangkat fisik tersedia**.
 
 ---
 
-## A. Buat Gmail khusus klien (5 menit)
+## A. Buat Gmail khusus + akun pendukung (15 menit)
 
 **Jangan pakai email pribadi bos.** Akun Google ini akan dipegang AI agent untuk
 Drive, Sheets, dan backup. Kalau tercampur email pribadi, riwayat dan berkas jadi
 kacau dan susah dipisah.
 
+### A.1 Format email — pakai pola ini, jangan dikarang sendiri
+
 ```
-Pola nama  : <nama-klien>.hermes@gmail.com
-Contoh     : gunawan.hermes@gmail.com
-             yanuar.hermes@gmail.com
+Pola  : cli.<nama>.<julukan>.<os>@gmail.com
+       cli   = penanda akun ini dipakai untuk CLI/agent
+       nama  = nama depan klien, huruf kecil
+       julukan = panggilan singkat klien (boleh nama belakang)
+       os    = sistem yang dipasang: win | mac | linubu
+
+Contoh: cli.gunawan.gun.win@gmail.com
+        cli.yanuar.yan.linubu@gmail.com
+        cli.siti.siti.mac@gmail.com
+```
+
+Nama yang dipakai harus **konsisten dengan username sistem** (lihat bagian B):
+kalau OS-nya Windows, akhiran `win`; macOS `mac`; Ubuntu/Linux `linubu`.
 
 Yang perlu dicatat saat mendaftar:
+
+```
   - nomor HP untuk verifikasi (boleh nomor bos atau nomor pemasang)
   - tanggal lahir  (jangan asal — dipakai kalau akun perlu dipulihkan)
   - password       → simpan di tempat aman, BUKAN di repo
@@ -37,6 +51,31 @@ Yang perlu dicatat saat mendaftar:
 
 **Setelah jadi, langsung aktifkan 2FA** dan simpan kode cadangannya. Akun ini
 memegang backup seluruh sistem; kalau hilang, backup ikut hilang.
+
+### A.2 Akun lain yang wajib dibuat di hari yang sama
+
+Bikin semuanya sekarang, jangan dicicil. Kalau satu belum ada, langkah 3 akan
+berhenti di tengah.
+
+```
+[ ] Gmail          → pola cli.<nama>.<julukan>.<os>@gmail.com  (bagian A.1)
+[ ] GitHub         → akun baru (bukan akun pribadi bos)
+                     + repo PRIVATE bernama "Pull Issue Content"
+                     (nama ini yang dipakai script; jangan diganti)
+[ ] Groq           → console.groq.com  → API key untuk STT
+                     (Whisper large-v3, bahasa "id")
+[ ] OpenRouter     → akun utama, beri label "tron"
+                     → untuk model DeepSeek (dipakai di langkah 3)
+[ ] Focused DeepSeek → sub-akun/API key terpisah di OpenRouter
+                     (dibuat sekarang, tapi TIDAK dipakai di langkah 0)
+```
+
+> **Jangan tertukar:** langkah 0 memakai **OpenRouter DeepSeek (akun "tron")**.
+> **Focused DeepSeek tidak dipakai di langkah 0** — sub-akun itu disiapkan
+> sekarang supaya siap kalau nanti diperlukan, bukan untuk dipasang hari ini.
+
+Semua kredensial (password, API key, token) disimpan **di luar repo**. Kalau
+sampai masuk repo lalu repo ter-push, kredensial itu dianggap bocor.
 
 ---
 
@@ -110,14 +149,15 @@ PATH pengguna, dan **terminal harus ditutup lalu dibuka lagi** agar perintah
 ### Pilih model saat pertama dijalankan
 
 ```
-Model yang dipakai : StepFun (gratis)
+Model yang dipakai : OpenRouter DeepSeek (akun "tron")
 Cara memilih       : jalankan `hermes` lalu ikuti pemilih model,
-                     pilih penyedia StepFun
+                     pilih provider OpenRouter → model DeepSeek
+Jangan pakai       : Focused DeepSeek (sub-akun itu disiapkan, belum dipasang)
 ```
 
-StepFun gratis dipakai untuk **langkah awal saja**, supaya bisa masuk ke chat dan
-menyelesaikan langkah berikutnya tanpa biaya. Nanti bisa diganti ke model berbayar
-(lihat `3-switch-focused-deepseek.md`).
+Kalau ingin tahap awal tanpa biaya, boleh pakai model gratis lebih dulu — tapi
+**target langkah 0 adalah Hermes jalan dengan OpenRouter DeepSeek**, karena
+liputan `3-switch-focused-deepseek.md` menganggap model itu sudah aktif.
 
 ### Verifikasi sebelum lanjut
 
@@ -141,14 +181,14 @@ Kalau dua pemeriksaan ini belum benar, **jangan lanjut ke Langkah 1**.
 Script tidak bisa bekerja tanpa ini. Siapkan **sebelum** mulai:
 
 ```
-[ ] Kabel HDMI            — untuk menyambung ke monitor saat instalasi
+[ ] Kabel HDMI + Monitor  — minimal sampai instalasi selesai; setelah server
+                            jalan dan SSH bisa, monitor tidak dipakai lagi
 [ ] Keyboard USB          — keyboard bawaan laptop bermasalah di installer
-[ ] Kemampuan Wi-Fi       — kalau tidak ada kabel LAN:
+[ ] Kemampuan Wi-Fi / LAN — salah satu wajib ada:
        - Wi-Fi bawaan mesin, ATAU
        - adapter Wi-Fi USB yang didukung Ubuntu
-[ ] Kabel LAN (disarankan) — lebih stabil dan langsung terdeteksi installer
-[ ] Flashdisk ≥ 8 GB      — untuk media instalasi
-[ ] Monitor               — minimal untuk melihat proses instalasi
+       - kabel LAN (paling stabil, langsung terdeteksi installer)
+[ ] Flashdisk ≥ 8 GB      — untuk media instalasi Ubuntu Server LTS
 ```
 
 > **Kalau mesin tidak punya Wi-Fi dan tidak ada kabel LAN**, instalasi tidak bisa
@@ -183,18 +223,52 @@ Keluaran yang benar:
 
 Centang satu per satu. Jangan mulai Langkah 1 sebelum semuanya tercentang.
 
+### Urutan kerja — kerjakan dari atas ke bawah
+
 ```
-[ ] Gmail khusus klien sudah dibuat + 2FA aktif + kode cadangan disimpan
+a. [ ] Gmail + akun lainnya
+       Gmail pola cli.<nama>.<julukan>.<os>@gmail.com
+       + GitHub (repo private "Pull Issue Content")
+       + Groq
+       + OpenRouter (akun "tron")
+       + sub-akun focused-deepseek
+       → semua kredensial dicatat di luar repo
+
+b. [ ] Ubuntu Server 24.04 LTS terpasang
+       dari flashdisk, installer resmi
+
+c. [ ] Username sistem = tslconsulting
+       harus sama persis, huruf kecil semua
+
+d. [ ] OpenSSH server DICENTANG saat instalasi
+       kalau terlewat: sudo apt install openssh-server
+
+e. [ ] Ganti zona waktu ke Jakarta
+       sudo timedatectl set-timezone Asia/Jakarta
+       timedatectl  → harus "Asia/Jakarta (WIB, +0700)"
+
+f. [ ] Hermes terpasang + model OpenRouter DeepSeek
+       catatan: pakai OpenRouter DeepSeek, BUKAN Focused DeepSeek
+```
+
+### Rincian
+
+```
+[ ] Gmail khusus sudah dibuat + 2FA aktif + kode cadangan disimpan
+[ ] Akun GitHub baru + repo private "Pull Issue Content" sudah ada
+[ ] Akun Groq + API key sudah ada (untuk STT bahasa "id")
+[ ] Akun OpenRouter "tron" + API key sudah ada
+[ ] Sub-akun focused-deepseek sudah dibuat (belum dipasang)
 [ ] Ubuntu Server 24.04 LTS terpasang
 [ ] Username sistem = tslconsulting
 [ ] OpenSSH server dicentang saat instalasi
 [ ] Hermes blank slate terpasang (`hermes --version` menjawab)
-[ ] Model StepFun (gratis) sudah dipilih dan bisa chat
+[ ] Model OpenRouter DeepSeek sudah dipilih dan bisa chat
 [ ] timedatectl menunjukkan Asia/Jakarta  ← WAJIB
-[ ] Kabel HDMI tersedia
+[ ] Kabel HDMI + monitor tersedia
 [ ] Keyboard USB tersedia
 [ ] Wi-Fi / kabel LAN tersedia dan tersambung
-[ ] Monitor tersedia
+[ ] Flashdisk instalasi tersedia
 [ ] Password sistem dicatat di tempat aman (bukan di repo)
 ```
 
