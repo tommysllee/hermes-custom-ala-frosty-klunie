@@ -18,71 +18,153 @@ Reglas duras:
 - Antes de crear algo nuevo, revisa si ya existe algo parecido. Si existe, mejora eso.
 - Cada vez que guardes algo, dime en una línea dónde lo pusiste y por qué ahí.
 
-# 2. AUTOBACKUP + RESTORE ONE-LINER
+# 2. AUTOBACKUP + RESTORE ONE-LINER (requisito duro, no se negocia)
 
-Objetivo: que un servidor Ubuntu recién instalado pueda volver EXACTAMENTE al último respaldo con un solo comando, sin que yo tenga que instalar Hermes, sin volver a iniciar sesión y sin volver a pegar tokens.
+Objetivo final: un servidor Ubuntu recién instalado, **sin Hermes instalado y sin
+ninguna configuración previa**, vuelve al último respaldo con **un solo comando**,
+y después de reiniciar funciona igual que el servidor original: sin relogin, sin
+volver a ingresar API/token, sin ningún error.
 
-Antes de eso, si todavía no existe, prepara el respaldo en GitHub:
+## 2.1 FLUJO EXACTO QUE YO QUIERO (cuatro pasos)
 
-- Un repositorio **PRIVADO** llamado "Pull Issue Content" (es el nombre que usan los scripts; si lo cambias, actualiza el script).
-- Un token de acceso personal (fine-grained PAT) con estos permisos exactos:
-  - **Contents**: Read and write
-  - **Issues**: Read and write
-  - **Pull requests**: Read and write
-- Instálalo con: `hermes config set GITHUB_TOKEN <token>`
-- Verifica de verdad: intenta leer el repositorio con ese token. Si devuelve error de permisos, dime cuál permiso falta.
+Este es el flujo, en este orden. Si tu implementación no permite hacerlo así,
+dímelo antes de construir otra cosa.
 
-## 2.1 JADWAL
+```
+PASO 1  Instalo Ubuntu Server y configuro el módem hasta tener internet.
+        NO instalo Hermes. NO configuro nada más.
 
-- Backup automático con cron **2 veces al día**. No más seguido: cada hora solo llena el historial sin aportar nada.
-- El respaldo anterior NO se sobrescribe: el historial se conserva (commits, no un único archivo que se pisa).
+PASO 2  Escribo UNA sola línea en la terminal de Ubuntu (la que está en el README
+        del repositorio). Esa línea ya lleva el PAT del repositorio dentro, así que
+        al dar Enter NO se me pregunta nada.
+        Variante aceptable: una línea que, al dar Enter, me pida el PAT una vez.
 
-## 2.2 CAKUPAN (qué se respalda)
+PASO 3  Esa misma línea: instala Hermes por su cuenta, clona el snapshot más
+        reciente, y restaura TODO el estado (ver 2.4).
 
-- Se respalda **TODO**, incluidos archivos y carpetas que aparezcan después.
-- **NO uses allowlist/whitelist.** Una lista blanca hace que lo nuevo quede fuera y el restore salga incompleto.
-- **Blacklist está permitida, pero lo ideal es NO excluir NADA.** Cada exclusión es una cosa que no vuelve, y eso obliga a relogin, a volver a pegar API/token, o produce error.
-- Meta: state vuelve **100% sin relogin, sin retoken, sin re-API, y sin error**. Si para lograrlo hay que subir todo, sube todo.
-- Si de verdad hay que excluir algo (solo caché temporal que se regenera), anótalo en el README con el motivo, y verifica que su ausencia no rompe el arranque.
-- Razón: solo el técnico tiene acceso al GitHub y al servidor. Por eso todo puede ir dentro, **incluidos logins, tokens, API keys y sesiones nuevas**.
+PASO 4  Reinicio (sudo reboot) para que la restauración quede aplicada.
+        Después del reinicio, todo debe estar como lo dejé la última vez.
+```
 
-## 2.3 HASIL BACKUP (qué debe contener)
+El comando del PASO 2 debe ser literalmente una línea, copiable tal cual, sin
+editar rutas ni completar variables a mano.
 
-El contenido debe bastar para que el restore devuelva estado, configuración, ajustes, cron, skills, scripts y todo lo demás **exactamente como estaba al momento del backup**:
+## 2.2 REPOSITORIO Y CREDENCIALES
 
-- `~/.hermes/` completo (config, perfiles, skills, cron, scripts, knowledge, sesiones, `state.db`)
-- Credenciales y sesiones de herramientas externas (Google, browser profile, git credentials)
-- **Conserva permisos, owner y symlinks** (usa `tar` con `-p`, o `rsync -a`); no los normalices.
+- Un repositorio **PRIVADO** en GitHub para el snapshot (los scripts usan el nombre
+  "Pull Issue Content"; si lo cambias, actualiza también el script y el README).
+- Se usa un **PAT clásico o fine-grained** con permiso de **Contents: Read and write**
+  sobre ese repositorio. Ese PAT va **dentro del one-liner del README**, para que el
+  PASO 2 no pida autenticación.
+- Instálalo también en el servidor: `hermes config set GITHUB_TOKEN <token>`.
+- Verifica de verdad que el token lee y escribe ese repositorio. Si falla, dime qué
+  permiso falta, no lo dejes en "debería funcionar".
 
-## 2.4 README EN EL REPO
+**Decisión mía, explícita:** acepto que el respaldo contenga credenciales
+(`.env`, tokens, API keys, cookies de sesión, sesiones de WhatsApp, claves SSH,
+credenciales de git). El repositorio es privado y solo el técnico tiene acceso.
+No intentes "limpiar" ni censurar credenciales para quedar bien: si falta una,
+el restore deja de ser total y me obliga a rehacer logins.
 
-El README debe contener:
+## 2.3 JADWAL
 
-- Instrucciones de restore paso a paso.
-- El comando **ONE-LINER de restore listo para copiar y pegar**, que ya incluya el PAT para que no haya que autenticarse a mano.
-- Lista de exclusiones (si hay alguna) con su motivo.
+- Backup automático con cron **2 veces al día** (por ejemplo 02:00 y 14:00 hora del
+  servidor). No más seguido: llena el historial sin aportar nada.
+- El respaldo anterior NO se sobrescribe: se conserva el historial (commits).
+- Cada ejecución debe terminar con push verificado. Si el push falla, **reintenta**
+  (mínimo 3 intentos) y guarda el registro del error; nunca dejes un push fallido
+  reportado como "éxito", y nunca confundas "ok" con "ya subió".
 
-## 2.5 RESTORE (requisito duro)
+## 2.4 COBERTURA TOTAL (qué debe volver)
 
-- En un Ubuntu Server vacío, yo **NO** instalo Hermes ni configuro nada.
-- Basta ejecutar el one-liner (git clone/pull) → todo vuelve al último backup y **funciona de inmediato**.
-- Condiciones: **SIN relogin, SIN volver a ingresar API/token, SIN ningún error**.
+Se respalda **TODO**, incluidas carpetas que aparezcan después. **No uses
+allowlist/whitelist.** La blacklist solo se permite para lo que se regenera solo
+(caché, logs, temporales) y cada exclusión debe estar anotada en el README con su
+motivo, comprobando que su ausencia no rompe el arranque.
+
+Lo que tiene que volver, sin excepción:
+
+- **Hermes**: `config.yaml` (modelos, gateway, MCP, herramientas, STT, delegación),
+  `skills/`, `cron/` con todos los jobs, `memories/`, base de memoria persistente,
+  `sessions/`, `knowledge/`, `scripts/`, `vault/`, `remote-view/` (con su perfil de
+  navegador), plantillas y documentos.
+- **Cada perfil por separado**, completo: `config.yaml`, `skills/`, `cron/`,
+  `memories/`, `knowledge/`, `scripts/`, `sessions/`, `state.db` (historial de
+  conversación), `.env`, `vault/`, auths, y cualquier carpeta nueva del perfil.
+- **Credenciales y sesiones**: `.env` de todos los perfiles, tokens de bot,
+  `google_token.json`, `auth.json`, cookies/sesiones de navegador (para no volver a
+  iniciar sesión), sesión de WhatsApp, `~/.ssh/`, `.git-credentials`, `rclone.conf`,
+  vault (clave + contenido).
+- **Sistema**: `docker-compose`, dumps de base de datos, unidades systemd, crontab.
+
+Meta medible: **state vuelve 100% sin relogin, sin retoken, sin re-API, sin error.**
+Si para lograrlo hay que subir todo, sube todo.
+
+Reglas técnicas obligatorias:
+
+- **Conserva permisos, owner y symlinks** (`tar -p` o `rsync -a`); no los normalices.
+- **Los symlinks de skills NO pueden guardarse como enlace**: si una skill es un
+  symlink a otra ruta, guárdala con su **contenido real** (dereference). Un symlink
+  guardado como enlace deja un enlace roto después del restore y esa skill
+  desaparece. Además, nunca guardes symlinks con ruta absoluta del servidor
+  original: en un servidor con otro usuario no resuelven.
+- `state.db` puede ir comprimido (`.zst`) para no chocar con el límite de GitHub,
+  pero debe restaurarse y quedar íntegro (`PRAGMA integrity_check` = `ok`).
+
+## 2.5 README DEL REPOSITORIO PRIVADO (parte de la entrega)
+
+El README del repositorio de respaldo debe contener, escrito y no supuesto:
+
+1. El **flujo de cuatro pasos** de 2.1 tal cual (instalar Ubuntu → una línea →
+   restore → reiniciar).
+2. El **one-liner listo para copiar y pegar, con el PAT incluido**, y la variante
+   que pide el PAT una vez.
+3. La **lista de lo que se restaura** (Hermes, cada perfil, credenciales, sistema)
+   y la lista de exclusiones con su motivo, si hay alguna.
+4. La nota de seguridad: por qué las credenciales están dentro (repositorio
+   privado, solo el técnico tiene acceso) y qué implica.
+5. El **resultado real de la prueba** de 2.7 con números.
+6. Los pasos posteriores al restore: `sudo reboot`, y las comprobaciones
+   (`hermes --version`, estado del gateway, prueba de remote view).
+7. Solución de problemas: PAT rechazado (401), push fallido (dónde está el log),
+   y qué hacer si una skill no aparece.
+
+## 2.6 RESTORE (requisito duro)
+
+- En un Ubuntu Server vacío, yo **NO** instalo Hermes ni configuro nada: el
+  one-liner instala Hermes por su cuenta si no está.
+- Basta ejecutar ese comando → todo vuelve al último backup y funciona de inmediato.
+- Condiciones: **SIN relogin, SIN volver a ingresar API/token, SIN ningún error.**
 - No me pidas nada más que el acceso a ese GitHub.
+- Si algo requiere intervención manual, debe ser **después** del restore y estar
+  escrito en el README (por ejemplo levantar un contenedor de Docker). Todo lo que
+  sea credencial o configuración debe volver solo.
 
-## 2.6 UJI WAJIB (no se negocia)
+## 2.7 PRUEBA OBLIGATORIA EN HOME FALSO (antes de darlo por bueno)
 
-Después de armarlo, prueba el restore en un **HOME FALSO** (nunca sobre el HOME real):
+Nunca pruebes sobre el HOME real ni sobre la base de datos en uso. Crea un entorno
+aislado de verdad:
 
-- Compara original vs restaurado: **checksum (sha256) y tamaño de cada archivo** deben coincidir.
-- Confirma que no hace falta relogin ni volver a pegar API/token.
-- Confirma que no aparece ningún error al arrancar.
-- Si algo no coincide, **corrige y repite** hasta que todo pase. No me entregues "casi listo".
-- Al terminar, dime el resultado con números: cuántos archivos comparados, cuántos coinciden, cuántos fallan.
+- HOME, HERMES_HOME y TMPDIR falsos, y `sudo`, `systemctl`, `crontab`, `docker`,
+  `apt`, `curl` desviados a un `PATH` falso, para que el sistema real no se toque.
+- El restore se prueba **clonando desde GitHub**, no desde el directorio local: así
+  se comprueba lo que de verdad hay subido.
+- Compara original contra restaurado con **checksum sha256 y tamaño** de cada
+  archivo, y compara el **contenido** de cada base (`integrity_check` y número de
+  mensajes), no solo que el archivo exista.
+- Comprueba explícitamente: todos los perfiles, todos los `.env` (mismas claves),
+  cron (mismo número de jobs), skills (misma cantidad, sin enlaces rotos),
+  credenciales, cookies y vault.
+- Exige **100%**: si algo no coincide o falta, corrige y repite hasta que pase.
+  No me entregues "casi listo" ni me reportes éxito sin números.
+- Al terminar, dime: cuántas comprobaciones hiciste, cuántas pasaron, cuántas
+  fallaron, y cuánto tardó el restore.
 
-## 2.7 ENTREGA
+## 2.8 ENTREGA (una línea)
 
-Dame en una línea: la hora del cron, el comando de restore, y el resultado de la prueba (archivos comparados / coinciden / fallan).
-
+Dame en una línea: la hora del cron, el comando de restore, y el resultado de la
+prueba (comprobaciones / pasadas / fallidas / duración). Debajo, si algo quedó
+pendiente, dilo sin adornos.
 
 # 3. REMOTE VIEW (con resolución alta y vertical)
 
