@@ -236,6 +236,63 @@ Si digo que sí:
 - Cuando esté conectado, verifica que funciona de verdad: pídeme un mensaje de prueba y confirma que lo leíste en la base de datos. No te conformes con que diga "conectado".
 - Si falla, dime exactamente qué falló. Si un método ya falló, prueba otro; no adivines dos veces lo mismo.
 
+## 7.a SKILL OBLIGATORIA: LIMITADOR DE AUTOMATIZACIÓN DE WHATSAPP
+
+Además de conectar el gateway, crea **una skill reutilizable** que controle cuántos
+contactos NUEVOS puede abrir la automatización. No es una nota en la memoria: es una
+skill con su script y su estado guardado, para que el límite se respete siempre,
+también cuando el envío lo lanza un cron o un perfil distinto.
+
+Reglas del límite (fijas, no configurables por accidente):
+
+```
+Máximo 10 contactos NUEVOS por HORA
+Máximo 30 contactos NUEVOS por DÍA
+Si se alcanza el límite diario, la automatización SE DETIENE y solo puede
+continuar al día siguiente (no hay forma de "seguir un poco más").
+```
+
+Qué debe hacer la skill:
+
+- **Consultar antes de enviar.** Cada envío a un contacto nuevo pasa primero por la
+  skill. Si el envío no pasa el control, no se manda nada y se explica el motivo.
+- **Contar solo contactos NUEVOS**, es decir, números con los que nunca hubo
+  conversación. Responder a un chat existente NO consume cupo.
+- **Guardar el estado en disco** (archivo o base de datos), no en memoria del
+  proceso: si el servidor se reinicia, los contadores deben seguir iguales.
+- **Ventana de hora móvil y corte de día** con la zona horaria del servidor
+  (Asia/Jakarta): al cambiar el día, el cupo diario vuelve a 30 y el horario a 10.
+- **Contar únicamente los envíos que salieron bien.** Si el envío falla, no consume
+  cupo; si salió, se registra de inmediato (antes de cualquier otro envío).
+- **Registrar cada intento** (número, fecha/hora, resultado, cupo usado del día y de
+  la hora) en un archivo de log, para poder auditar después.
+- **Mensaje claro al llegar al límite**, por ejemplo:
+  `Límite alcanzado: 30 contactos nuevos hoy. La automatización continúa mañana a las 00:00 (Asia/Jakarta).`
+  y, si es el límite por hora:
+  `Límite por hora alcanzado (10). Reintenta después de las HH:MM.`
+- **No se puede saltar el control** cambiando de perfil, lanzando el envío desde un
+  cron, ni repitiendo el comando: el estado es compartido y la comprobación es
+  obligatoria en todos los caminos.
+- Debe funcionar igual si mañana el número de contactos por hora o por día cambia:
+  deja los dos valores en un único lugar (configuración de la skill), no repartidos
+  por el código.
+
+Verificación obligatoria antes de decir que está listo (con números, no con
+"debería funcionar"):
+
+```
+1. Enviar 10 contactos nuevos seguidos -> el número 11 en la misma hora
+   debe quedar BLOQUEADO con el mensaje del límite por hora.
+2. Forzar (en un entorno de prueba) 30 contactos nuevos en el día -> el número 31
+   debe quedar BLOQUEADO con el mensaje del límite diario.
+3. Simular el cambio de día -> el cupo debe volver a 30 y permitir el envío.
+4. Reiniciar el proceso/servidor -> los contadores deben conservarse iguales.
+5. Responder a un chat existente -> NO debe consumir cupo.
+```
+
+Anota la skill en el índice de skills del servidor y dime en una línea dónde quedó
+y cómo se llama.
+
 # 8. CERRAR EN INDONESIO Y LANJUTKAN
 
 Sampai di sini, kembali ke bahasa Indonesia untuk percakapan kita.
